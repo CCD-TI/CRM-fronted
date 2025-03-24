@@ -18,7 +18,7 @@ interface Flow {
 
 interface ApiResponse {
   flows: Flow[];
-  cadic:string
+ 
 }
 
 const DropdownBuscador = () => {
