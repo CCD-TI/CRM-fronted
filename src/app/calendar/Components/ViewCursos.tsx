@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Filter, Plus, Edit, Trash2, Eye, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Modalcont from './Modals/Modalcont';
+import { FaPlusCircle } from 'react-icons/fa';
+import ModalEdit from './Modals/ModalEdit';
 
 const AdminCursos = () => {
   const cursos = [
@@ -283,15 +285,25 @@ const AdminCursos = () => {
                       Data={[]}
                        
                        btn={
+                        <button className="text-green-600 hover:text-green-900">
+                          <FaPlusCircle  className="w-5 h-5" />
+                        </button>
+
+                       } />
+                       < ModalEdit
+                       
+                      Data={[]}
+                       
+                       btn={
                         <button className="text-blue-600 hover:text-blue-900">
                           <Edit className="w-5 h-5" />
                         </button>
 
                        } />
                      
-                        {/* <button className="text-red-600 hover:text-red-900">
+                        <button className="text-red-600 hover:text-red-900">
                           <Trash2 className="w-5 h-5" />
-                        </button> */}
+                        </button>
                       </div>
                     </td>
                   </tr>

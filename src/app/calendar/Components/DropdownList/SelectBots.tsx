@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react';
 import { IoCloseCircleOutline } from 'react-icons/io5';
 import { TiArrowSortedDown } from 'react-icons/ti';
+import { Bots ,ApiResponsebots } from "@/types/flows";
 
-// Definir interfaces para TypeScript
 
-
-interface Bots {
-  id: number;
-  name: string;
+interface DropDownListSend {
+  onSeleccionBots: (bots: Bots[]) => void; // Cambiado para recibir array de bots
 }
 
-interface ApiResponse {
-  bots: Bots[];
-}
-
-const DropdownBuscador = () => {
+const DropdownBuscador = ({ onSeleccionBots }: DropDownListSend) => {
   const [opciones, setOpciones] = useState<Bots[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
   const [busqueda, setBusqueda] = useState<string>('');
@@ -25,7 +19,7 @@ const DropdownBuscador = () => {
   const obtenerDatos = async (terminoBusqueda = '') => {
     try {
       setCargando(true);
-      const respuesta = await fetch(`http://192.168.1.182:8000/api/bots/search?imagebot=bot`, {
+      const respuesta = await fetch(`http://192.168.1.220:8000/api/bots/search?imagebot=asignacion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +31,7 @@ const DropdownBuscador = () => {
         throw new Error('Error en la respuesta de la red');
       }
       
-      const datos: ApiResponse = await respuesta.json();
+      const datos: ApiResponsebots = await respuesta.json();
       setOpciones(datos.bots || []);
     } catch (error) {
       console.error('Error al obtener datos:', error);
@@ -52,6 +46,11 @@ const DropdownBuscador = () => {
     obtenerDatos();
   }, []);
 
+  // Actualizar la lista de seleccionados en el padre cuando cambie
+  useEffect(() => {
+    onSeleccionBots(seleccionados);
+  }, [seleccionados, onSeleccionBots]);
+
   // Manejar cambio en la entrada de búsqueda
   const manejarCambioBusqueda = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
@@ -61,18 +60,15 @@ const DropdownBuscador = () => {
 
   // Manejar selección de opción
   const manejarSeleccion = (opcion: Bots) => {
-    // Comprobar si el bot ya está seleccionado
-    const yaSeleccionado = seleccionados.some(item => item.id === opcion.id);
-    
-    if (yaSeleccionado) {
-      // Si ya está seleccionado, lo quitamos de la lista
-      setSeleccionados(seleccionados.filter(item => item.id !== opcion.id));
-    } else {
-      // Si no está seleccionado, lo añadimos a la lista
-      setSeleccionados([...seleccionados, opcion]);
-    }
-    
-    // No cerramos el dropdown y mantenemos el texto de búsqueda
+    setSeleccionados(prev => {
+      const yaSeleccionado = prev.some(item => item.id === opcion.id);
+      
+      if (yaSeleccionado) {
+        return prev.filter(item => item.id !== opcion.id);
+      } else {
+        return [...prev, opcion];
+      }
+    });
   };
 
   // Verificar si un elemento está seleccionado
@@ -82,7 +78,7 @@ const DropdownBuscador = () => {
 
   // Eliminar un elemento seleccionado
   const eliminarSeleccionado = (id: number) => {
-    setSeleccionados(seleccionados.filter(item => item.id !== id));
+    setSeleccionados(prev => prev.filter(item => item.id !== id));
   };
 
   return (
@@ -101,7 +97,7 @@ const DropdownBuscador = () => {
           onClick={() => setAbierto(!abierto)}
           type="button"
         >
-       {abierto ?  <IoCloseCircleOutline className='text-3xl text-red-600 '/>  :<TiArrowSortedDown className='text-3xl' /> }
+          {abierto ? <IoCloseCircleOutline className='text-3xl text-red-600'/> : <TiArrowSortedDown className='text-3xl' />}
         </button>
       </div>
       
@@ -113,7 +109,9 @@ const DropdownBuscador = () => {
             opciones.map((opcion) => (
               <div
                 key={opcion.id}
-                className={`p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${estaSeleccionado(opcion.id) ? 'bg-blue-100' : ''}`}
+                className={`p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center ${
+                  estaSeleccionado(opcion.id) ? 'bg-blue-100' : ''
+                }`}
                 onClick={() => manejarSeleccion(opcion)}
               >
                 <span>{opcion.name}</span>
@@ -133,10 +131,16 @@ const DropdownBuscador = () => {
           <div className="font-medium mb-1">Bots seleccionados:</div>
           <div className="flex flex-wrap gap-2">
             {seleccionados.map(bot => (
-              <div key={bot.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
+              <div 
+                key={bot.id} 
+                className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center"
+              >
                 <span>{bot.name}</span>
                 <button 
-                  onClick={() => eliminarSeleccionado(bot.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    eliminarSeleccionado(bot.id);
+                  }}
                   className="ml-2 text-blue-600 hover:text-blue-800"
                   type="button"
                 >

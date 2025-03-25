@@ -20,9 +20,11 @@ import {
 import { MdInsertPhoto } from "react-icons/md";
 import SelectFlows from "../DropdownList/SelectFlows";
 import SelectBots from "../DropdownList/SelectBots";
+import { IoCloseCircle } from "react-icons/io5";
 import SelectTemplates from "../DropdownList/SelectTemplates";
 import { Flow } from "@/types/flows";
 import { Bots } from "@/types/flows";
+
 
 interface DataCurso {
   Data: [];
@@ -45,40 +47,9 @@ export default function App({ Data, btn }: DataCurso) {
 
   const [flowSeleccionado, setFlowSeleccionado] = useState<Flow | null>(null);
   const [botSeleccionado, setbotSeleccionado] = useState<Bots[] | null>(null);
-  const [templateSeleccionado, settemplateSeleccionado] = useState<Flow | null>(
-    null,
-  );
+  const [templateSeleccionado, setTemplateseleccionado] = useState<Flow | null>(null);
 
-  const handleSubmit2 = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Crear objeto con los datos seleccionados
-    const datosParaEnviar = {
-      curso: {
-        id: "CUR001", // Puedes reemplazar esto con un estado si lo necesitas
-        nombre: "Nombre del curso", // Opcional
-      },
-      flujo: flowSeleccionado,
-      bots: botSeleccionado,
-      plantilla: templateSeleccionado, // Asegúrate de tener este estado definido
-    };
-
-    // Simular envío a endpoint (solo muestra en consola)
-    console.log("Datos a enviar:", JSON.stringify(datosParaEnviar, null, 2));
-
-    // Aquí iría la llamada real a la API si la tuvieras:
-    // fetch('tu-endpoint', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(datosParaEnviar)
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log('Respuesta:', data));
-
-    // Mostrar confirmación al usuario
-    alert("Datos listos para enviar (ver consola)");
-  };
-
+ 
   // Track which modal is open
   const [openModal, setOpenModal] = useState<string | null>(null);
 
@@ -110,30 +81,8 @@ export default function App({ Data, btn }: DataCurso) {
     };
   }, [openModal]);
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "images" | "videos" | "documents" | "audio",
-  ) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
 
-      switch (type) {
-        case "images":
-          setImages((prev) => [...prev, ...filesArray]);
-          break;
-        case "videos":
-          setVideos((prev) => [...prev, ...filesArray]);
-          break;
-        case "documents":
-          setDocuments((prev) => [...prev, ...filesArray]);
-          break;
-        case "audio":
-          setAudioFiles((prev) => [...prev, ...filesArray]);
-          break;
-      }
-    }
-  };
-
+ 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would typically send the form data to your backend
@@ -210,7 +159,23 @@ export default function App({ Data, btn }: DataCurso) {
                       <div
                         className={activeView === "course" ? "block" : "hidden"}
                       >
-                        <SelectFlows onSeleccion={setFlowSeleccionado} />
+                        <div className="flex flex-col gap-10">
+                          <SelectFlows onSeleccion={setFlowSeleccionado} />
+
+                          <div className="flex w-full flex-col gap-4 rounded-lg border-2 p-2">
+                            <h1 className="border-b-1 pb-2 font-bold">
+                              Flujo Actual
+                            </h1>
+                            <div className="flex flex-wrap gap-3 p-4">
+                              {/* Mapea un array de "cantidad" elementos y genera los divs */}
+
+                              <div className="flex w-full items-center justify-between rounded-lg bg-gray-200 p-4">
+                                <h1>masivos T-3000</h1>
+                                <IoCloseCircle className="cursor-pointer text-2xl text-red-600 hover:text-red-900" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       <div
@@ -218,34 +183,48 @@ export default function App({ Data, btn }: DataCurso) {
                           activeView === "platform" ? "block" : "hidden"
                         }
                       >
-                        <SelectBots onSeleccionBots={setbotSeleccionado} />
+                        <div className="flex flex-col gap-10">
+                          <SelectBots onSeleccionBots={setbotSeleccionado} />
 
-                        {botSeleccionado && (
-                          <div className="mt-4">
-                            <h3>
-                              Total de bots seleccionados:{" "}
-                              {botSeleccionado.length}
-                            </h3>
-                            <ul>
-                              {botSeleccionado.map((bot) => (
-                                <li key={bot.id}>{bot.name}</li>
+                          <div className="flex w-full flex-col gap-4 rounded-lg border-2 p-2">
+                            <h1 className="border-b-1 pb-2 font-bold">
+                              Bots Afiliados al curso
+                            </h1>
+                            <div className="flex flex-wrap gap-3">
+                              {/* Mapea un array de "cantidad" elementos y genera los divs */}
+                              {Array.from({ length: 20 }).map((_, index) => (
+                                <div
+                                  key={index}
+                                  className="w-[100px] bg-gray-200 p-2"
+                                >
+                                  <div className="flex w-full items-center justify-between gap-1">
+                                    <h1>Bot {index + 1}</h1>
+                                    <IoCloseCircle className="cursor-pointer text-xl text-red-600 hover:text-red-900" />
+                                  </div>
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
 
                       <div
                         className={`h-full ${activeView === "view" ? "block" : "hidden"}`}
                       >
                         <div className="flex h-full flex-col justify-between">
-                          <SelectTemplates onSeleccion={setFlowSeleccionado} />
+                          <SelectTemplates onSeleccion={setTemplateseleccionado} />
 
                           {flowSeleccionado && (
-                            <p>Nombre: {flowSeleccionado.name}</p>
+                            <div className="mt-4 rounded-lg bg-gray-100 p-4">
+                              <h2 className="font-semibold">
+                                Detalles de la plantilla:
+                              </h2>
+                              <p>Nombre: {flowSeleccionado.name}</p>
+                              <p>ID: {flowSeleccionado.id}</p>
+                            </div>
                           )}
                           <button className="mt-4 rounded-2xl bg-blue-500 p-4 text-white">
-                            Enviar
+                            Actualizar
                           </button>
                         </div>
                       </div>
