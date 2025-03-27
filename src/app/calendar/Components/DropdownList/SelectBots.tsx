@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IoCloseCircleOutline } from 'react-icons/io5';
 import { TiArrowSortedDown } from 'react-icons/ti';
 import { Bots ,ApiResponsebots } from "@/types/flows";
+import { searchBots } from '@/services/Cursos-Api/Dropdoplist.services';
 
 
 interface DropDownListSend {
@@ -19,20 +20,8 @@ const DropdownBuscador = ({ onSeleccionBots }: DropDownListSend) => {
   const obtenerDatos = async (terminoBusqueda = '') => {
     try {
       setCargando(true);
-      const respuesta = await fetch(`http://192.168.1.220:8000/api/bots/search?imagebot=asignacion`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ search: terminoBusqueda }),
-      });
-      
-      if (!respuesta.ok) {
-        throw new Error('Error en la respuesta de la red');
-      }
-      
-      const datos: ApiResponsebots = await respuesta.json();
-      setOpciones(datos.bots || []);
+      const bots = await searchBots(terminoBusqueda);
+      setOpciones(bots);
     } catch (error) {
       console.error('Error al obtener datos:', error);
       setOpciones([]);

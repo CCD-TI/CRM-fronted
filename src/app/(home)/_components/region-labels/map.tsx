@@ -3,7 +3,7 @@
 import jsVectorMap from "jsvectormap";
 import { useEffect } from "react";
 
-import "@/js/us-aea-en";
+import "@/js/pe_merc"; // Ajusta la ruta según donde hayas puesto el archivo
 
 export default function Map() {
   useEffect(() => {

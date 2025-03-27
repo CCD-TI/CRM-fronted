@@ -17,12 +17,16 @@ import {
   X,
   Plus,
 } from "lucide-react";
-import { MdInsertPhoto } from "react-icons/md";
+
 import SelectFlows from "../DropdownList/SelectFlows";
 import SelectBots from "../DropdownList/SelectBots";
 import SelectTemplates from "../DropdownList/SelectTemplates";
 import { Flow } from "@/types/flows";
 import { Bots } from "@/types/flows";
+import { BotService, CursoService } from "@/services/Cursos-Api/PushAPI";
+import { ICurso } from '@/types/apiResponseCurso';
+
+
 
 interface DataCurso {
   Data: [];
@@ -31,14 +35,7 @@ interface DataCurso {
 
 export default function App({ Data, btn }: DataCurso) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("");
-  const [price, setPrice] = useState("");
-  const [level, setLevel] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [videos, setVideos] = useState<File[]>([]);
-  const [documents, setDocuments] = useState<File[]>([]);
-  const [audioFiles, setAudioFiles] = useState<File[]>([]);
+
   const [activeView, setActiveView] = useState<"course" | "platform" | "view">(
     "course",
   );
@@ -48,35 +45,71 @@ export default function App({ Data, btn }: DataCurso) {
   const [templateSeleccionado, settemplateSeleccionado] = useState<Flow | null>(
     null,
   );
-
-  const handleSubmit2 = (e: React.FormEvent) => {
+  
+  const [curso, setCurso] = useState<ICurso | null>(null);
+  const handleSubmit2 = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Crear objeto con los datos seleccionados
-    const datosParaEnviar = {
-      curso: {
-        id: "CUR001", // Puedes reemplazar esto con un estado si lo necesitas
-        nombre: "Nombre del curso", // Opcional
-      },
-      flujo: flowSeleccionado,
-      bots: botSeleccionado,
-      plantilla: templateSeleccionado, // Asegúrate de tener este estado definido
-    };
-
-    // Simular envío a endpoint (solo muestra en consola)
-    console.log("Datos a enviar:", JSON.stringify(datosParaEnviar, null, 2));
-
-    // Aquí iría la llamada real a la API si la tuvieras:
-    // fetch('tu-endpoint', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(datosParaEnviar)
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log('Respuesta:', data));
-
-    // Mostrar confirmación al usuario
-    alert("Datos listos para enviar (ver consola)");
+  
+    // Validaciones iniciales
+    if (!flowSeleccionado) {
+      alert("Por favor selecciona un flow");
+      return;
+    }
+  
+    if (!botSeleccionado || botSeleccionado.length === 0) {
+      alert("Por favor selecciona al menos un bot");
+      return;
+    }
+  
+    try {
+      // 1. Crear el curso primero
+      const datosCurso = {
+        cursoCCDId: 1,
+        nombre: "CUR001", // ¿tiene que ser dinamico ser dinámico?
+        flowId: flowSeleccionado.id,
+        flowNombre: flowSeleccionado.name,
+        templateNombre: flowSeleccionado.name,
+      };
+  
+      const cursoCreado = await CursoService.createCurso(datosCurso);
+      setCurso(cursoCreado);
+      // console.log('Curso creado:', cursoCreado);
+  
+      // 2. Crear las relaciones con bots
+      const botData = {
+        cursoId: cursoCreado.id, // Usamos el ID del curso recién creado
+        botsId: botSeleccionado.map(bot => bot.id),
+        botsNombre: botSeleccionado.map(bot => bot.name),
+      };
+  
+      const botsCreados = await BotService.createCurso(botData);
+      // console.log('Relaciones bot-curso creadas:', botsCreados);
+  
+      // 3. Feedback al usuario
+      alert("Datos enviados correctamente");
+      
+      // Opcional: Resetear estados
+      // setFlowSeleccionado(null);
+      // setBotSeleccionado([]);
+  
+    } catch (error) {
+      console.error("Error:", error);
+      
+      let errorMessage = "Error al enviar los datos";
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      } else if (typeof error === 'string') {
+        errorMessage += `: ${error}`;
+      }
+  
+      alert(errorMessage);
+      
+      // Opcional: Rollback o limpieza si falla la segunda operación
+      if (curso) {
+        // Podrías llamar a un servicio para eliminar el curso creado
+        // await CursoService.deleteCurso(curso.id);
+      }
+    }
   };
 
   // Track which modal is open
@@ -110,42 +143,11 @@ export default function App({ Data, btn }: DataCurso) {
     };
   }, [openModal]);
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "images" | "videos" | "documents" | "audio",
-  ) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-
-      switch (type) {
-        case "images":
-          setImages((prev) => [...prev, ...filesArray]);
-          break;
-        case "videos":
-          setVideos((prev) => [...prev, ...filesArray]);
-          break;
-        case "documents":
-          setDocuments((prev) => [...prev, ...filesArray]);
-          break;
-        case "audio":
-          setAudioFiles((prev) => [...prev, ...filesArray]);
-          break;
-      }
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would typically send the form data to your backend
     console.log({
-      title,
-      duration,
-      price,
-      level,
-      images,
-      videos,
-      documents,
-      audioFiles,
+      
     });
   };
 
@@ -244,7 +246,10 @@ export default function App({ Data, btn }: DataCurso) {
                           {flowSeleccionado && (
                             <p>Nombre: {flowSeleccionado.name}</p>
                           )}
-                          <button className="mt-4 rounded-2xl bg-blue-500 p-4 text-white">
+                          <button
+                            onClick={handleSubmit2}
+                            className="mt-4 rounded-2xl bg-blue-500 p-4 text-white"
+                          >
                             Enviar
                           </button>
                         </div>
