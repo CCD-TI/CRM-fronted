@@ -1,4 +1,4 @@
-import { Course, ICurso } from '@/types/apiResponseCurso';
+import { ICurso } from '@/types/apiResponseCurso';
 
 const API_URL = 'http://localhost:8000'; // Ajusta la URL base
 
@@ -6,10 +6,10 @@ const API_URL = 'http://localhost:8000'; // Ajusta la URL base
  // Send the data
 export const CursoService = {
   // Enviar datos del formulario al backend usando fetch
-  async createCurso(formData: any) {
+  async createCurso(formData: any , id:number) {
     try {
-      const response = await fetch(`${API_URL}/api/storage/curso`, {
-        method: 'POST',
+      const response = await fetch(`${API_URL}/api/storage/curso/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
@@ -58,6 +58,36 @@ export const BotService = {
   }
 };
 
+
+// searh data
+export const SearchCurso = {
+  async Search(param:string):Promise<ICurso[]>{
+  try {
+        const encondeparam = encodeURIComponent(param); // Codifica el parámetro de búsqueda
+          const response = await fetch(`${API_URL}/api/storage/curso/search?q=${encondeparam}`, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+      
+            const cursos = await response.json();
+            console.log('Datos recibidos:', cursos); // Debug
+            return cursos;
+            
+          } catch (error: any) {
+            console.error('Error en search:', error);
+            throw new Error(error.message || 'Error al buscar cursos');
+          }
+        }
+}
+
 // view Data
 
 
@@ -81,7 +111,6 @@ export const ViewCurso = {
                 const cursos = await response.json();
       
                 // 👇 Console.log para ver los datos recibidos
-                console.log('Datos recibidos del backend:', cursos);
                 
                 return cursos;
         
@@ -92,33 +121,65 @@ export const ViewCurso = {
 
 }
 }
-export const ViewCourseData = {
-    async View():Promise<Course[]>{
-    try {
-
-            const response = await fetch(`${API_URL}/api/storage/course`, {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json'
-                }
-              });
-
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Error al obtener cursos');
-              }
-        
-                const cursos = await response.json();
-      
-                // 👇 Console.log para ver los datos recibidos
-                console.log('Datos recibidos del backend:', cursos);
-                
-                return cursos;
-        
-    } catch (error: any) {
-        console.error('Error en getCursos:', error);
-        throw error; // Permite manejar el error en el componente
+export const ViewCursoId = {
+    async VieId(id: number): Promise<ICurso> {
+      // 👇 Validación del ID (debe ser un número positivo)
+      if (!id || typeof id !== 'number' || id <= 0) {
+        throw new Error('ID de curso no válido. Debe ser un número mayor a 0.');
       }
+  
+      try {
+        const response = await fetch(`${API_URL}/api/storage/curso/${id}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Error al obtener el curso');
+        }
+  
+        const cursos = await response.json();
+        // console.log('Datos recibidos del backend:', cursos);
+        
+        return cursos;
+      } catch (error: any) {
+        console.error('Error en ViewCursoId.View:', error);
+        throw error; // Re-lanzamos el error para manejarlo en el componente
+      }
+    },
+  };
 
-}
-}
+
+
+// delete data
+
+export const deletebot = {
+    // Enviar datos del formulario al backend usando fetch
+    async EliminarBot( id:number) {
+      try {
+        const response = await fetch(`${API_URL}/api/storage/bot-curso/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+          
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+        }
+  
+        const data: ICurso = await response.json();
+        return data; // Devuelve los datos tipados como ICurso
+        
+      } catch (error) {
+        console.error('Error en CursoService.createCurso:', error);
+        throw error; // Relanza el error para manejarlo en el componente
+      }
+    }
+  };
+

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Flow, ApiResponse } from '../../../../types/flows';
+import { searchFlows } from '@/services/Cursos-Api/Dropdoplist.services';
 
 
 interface DropDownlistTemplateProps {
@@ -16,23 +17,14 @@ const DropDownlistTemplate =  ({ onSeleccion }: DropDownlistTemplateProps) => {
   
 
   // Función para obtener datos de la API
-  const obtenerDatos = async (terminoBusqueda = '') => {
+ const obtenerDatos = async (terminoBusqueda = '') => {
     try {
       setCargando(true);
-      const respuesta = await fetch(`http://192.168.1.182:8000/api/flows/search?masivos=false`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ search: terminoBusqueda }),
-      });
       
-      if (!respuesta.ok) {
-        throw new Error('Error en la respuesta de la red');
-      }
+      const flows = await searchFlows(terminoBusqueda)
+    
       
-      const datos: ApiResponse = await respuesta.json();
-      setOpciones(datos.flows || []);
+      setOpciones(flows);
     } catch (error) {
       console.error('Error al obtener datos:', error);
       setOpciones([]);

@@ -16,7 +16,7 @@ export const NAV_DATA = [
       },
       {
         title: "Cursos",
-        url: "/calendar",
+        url: "/curso",
         icon: Icons.Calendar,
         items: [],
       },

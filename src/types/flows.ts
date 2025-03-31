@@ -8,9 +8,18 @@ export interface Mensaje {
     };
   }
   
-  export  interface Bots {
+  export interface Bots {
     id: number;
     name: string;
+    botId: number;
+    botNombre: string;
+  }
+  
+  export interface IBot {
+    id: number;
+    name: string;
+    botNombre?:string
+    // Add any other properties your bot might have
   }
   
   export interface ApiResponsebots {

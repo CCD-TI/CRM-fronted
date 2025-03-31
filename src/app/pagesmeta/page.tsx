@@ -17,6 +17,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import ModalFormCampaing from "./Component/Modals/ModalFormCampaing";
+import { PaginasDelete, PaginasView } from "@/services/Leads-api/Paginas";
+import { paginas } from "@/types/leads/paginas";
+import Swal from "sweetalert2";
+import ModalFormPagemeta from "./Component/Modals/ModalFormPagemeta";
+import ModalFormPagemetaUpdate from "./Component/Modals/ModalFormPagemetaUpdate";
 
 const USERS = [
   {
@@ -131,7 +136,7 @@ const USERS = [
 
 export default function Campañas() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(2);
   const [roleFilter, setRoleFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "id", direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,45 +144,129 @@ export default function Campañas() {
   const [selectAll, setSelectAll] = useState(false);
   const itemsPerPage = 5;
 
-  const filteredData = useMemo(() => {
-    return USERS.filter((user) => {
-      const matchesSearch =
-        user.pagina.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const [paginas, setpaginas] = useState<paginas[]>([]);
+  const [updateFlag, setUpdateFlag] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        user.status.toLowerCase() === statusFilter.toLowerCase();
+  const fetchCursos = async (term = "") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await PaginasView.ViewData(term);
+      setpaginas(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      console.error("Error al cargar cursos:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      return matchesSearch && matchesStatus;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("Datos recibidos del backend:", paginas);
+      fetchCursos(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, updateFlag]);
+
+  const handleSearchChange = (e: { target: { value: any } }) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const deleteData = async (Idpagina: number) => {
+    // Eliminé el parámetro 'e' ya que no es necesario
+    // Paso 1: Confirmación con SweetAlert
+    const confirmation = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esta acción!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     });
-  }, [searchTerm, statusFilter, roleFilter]);
+
+    // Si el usuario cancela, salimos de la función
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      // Paso 2: Mostrar loader mientras se procesa
+      // Swal.fire({
+      //   title: "Eliminando...",
+      //   allowOutsideClick: false,
+      //   didOpen: () => Swal.showLoading(),
+      // });
+
+      // Paso 3: Actualizar el curso
+      const datosActualizados = {
+        flowId: 0,
+        flowNombre: "null",
+        templateNombre: "null",
+        status: 0,
+      };
+
+      // await CursoService.createCurso(datosActualizados, IdCurso);
+      await PaginasDelete.deletePaginas(Idpagina);
+      setUpdateFlag((prev) => !prev); // Cambia entre true/false
+
+      // Paso 4: Notificar éxito
+      await Swal.fire({
+        icon: "success",
+        title: "¡Eliminado!",
+        text: "Los datos se eliminaron correctamente",
+        showConfirmButton: true,
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo completar la eliminación",
+        footer: error instanceof Error ? error.message : "",
+      });
+    }
+  };
+
+  // const filteredData = useMemo(() => {
+  //   return paginas.filter((user) => {
+
+  //     const matchesStatus =
+  //       statusFilter === 2 ||
+  //       user.status === Number(statusFilter);
+
+  //     return matchesStatus;
+  //   });
+  // }, [searchTerm, statusFilter, roleFilter]);
 
   // Aplicar ordenamiento
-  const sortedData = useMemo(() => {
-    const sorted = [...filteredData].sort((a, b) => {
-      if (
-        a[sortConfig.key as keyof typeof a] <
-        b[sortConfig.key as keyof typeof b]
-      ) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (
-        a[sortConfig.key as keyof typeof a] >
-        b[sortConfig.key as keyof typeof b]
-      ) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-    return sorted;
-  }, [filteredData, sortConfig]);
+  // const sortedData = useMemo(() => {
+  //   const sorted = [...filteredData].sort((a, b) => {
+  //     if (
+  //       a[sortConfig.key as keyof typeof a] <
+  //       b[sortConfig.key as keyof typeof b]
+  //     ) {
+  //       return sortConfig.direction === "asc" ? -1 : 1;
+  //     }
+  //     if (
+  //       a[sortConfig.key as keyof typeof a] >
+  //       b[sortConfig.key as keyof typeof b]
+  //     ) {
+  //       return sortConfig.direction === "asc" ? 1 : -1;
+  //     }
+  //     return 0;
+  //   });
+  //   return sorted;
+  // }, [filteredData, sortConfig]);
 
   // Paginación
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedData, currentPage]);
+  // const paginatedData = useMemo(() => {
+  //   const startIndex = (currentPage - 1) * itemsPerPage;
+  //   return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  // }, [sortedData, currentPage]);
 
   // Función para ordenar
   const requestSort = (key: string) => {
@@ -188,35 +277,28 @@ export default function Campañas() {
     setSortConfig({ key, direction });
   };
 
-  // Función para manejar la selección de filas
-  const toggleRowSelection = (id: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
-    );
-  };
-
   // Función para seleccionar/deseleccionar todas las filas
-  const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(paginatedData.map((user) => user.id));
-    }
-    setSelectAll(!selectAll);
-  };
+  // const toggleSelectAll = () => {
+  //   if (selectAll) {
+  //     setSelectedRows([]);
+  //   } else {
+  //     setSelectedRows(paginatedData.map((user) => user.id));
+  //   }
+  //   setSelectAll(!selectAll);
+  // };
 
   // Actualizar selectAll cuando cambia la página
-  useEffect(() => {
-    const allSelected = paginatedData.every((user) =>
-      selectedRows.includes(user.id),
-    );
-    setSelectAll(allSelected && paginatedData.length > 0);
-  }, [paginatedData, selectedRows]);
+  // useEffect(() => {
+  //   const allSelected = paginatedData.every((user) =>
+  //     selectedRows.includes(user.id),
+  //   );
+  //   setSelectAll(allSelected && paginatedData.length > 0);
+  // }, [paginatedData, selectedRows]);
 
   // Calcular estadísticas
   const stats = useMemo(() => {
-    const totalUsers = USERS.length;
-    const activeUsers = USERS.filter((user) => user.status === "Activo").length;
+    const totalUsers = paginas.length;
+    const activeUsers = paginas.filter((user) => user.status === 1).length;
     const totalTransactions = USERS.reduce(
       (sum, user) => sum + user.transactions,
       0,
@@ -234,6 +316,7 @@ export default function Campañas() {
       activePercentage: Math.round((activeUsers / totalUsers) * 100),
     };
   }, []);
+
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
       <div className="mb-8">
@@ -448,12 +531,19 @@ export default function Campañas() {
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="Buscar Paginas..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                 />
               </div>
-
+              <ModalFormPagemeta
+                btnCreate={
+                  <button className="rounded bg-blue-500 px-4 py-2 text-white">
+                    Crear PageMeta
+                  </button>
+                }
+                onUpdate={() => setUpdateFlag((prev) => !prev)}
+              />
               {/* Filtro de Estado */}
-              <div className="relative inline-block">
+              {/* <div className="relative inline-block">
                 <select
                   className="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   value={statusFilter}
@@ -467,14 +557,17 @@ export default function Campañas() {
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                   <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
-
+        {loading && (
+          <p className="text-center text-gray-500">Cargando cursos...</p>
+        )}
+        {error && <p className="text-center text-red-500">Error: {error}</p>}
         {/* Tabla */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+          <table className="h-[600px] w-full text-left text-sm text-gray-500 dark:text-gray-400">
             <thead className="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th
@@ -497,17 +590,17 @@ export default function Campañas() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
+
                 <th
                   scope="col"
                   className="cursor-pointer px-6 py-3"
-                  onClick={() => requestSort("email")}
+                  onClick={() => requestSort("status")}
                 >
                   <div className="flex items-center">
-                    Email
+                    Fecha de creacion:
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                
                 <th
                   scope="col"
                   className="cursor-pointer px-6 py-3"
@@ -518,114 +611,14 @@ export default function Campañas() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="cursor-pointer px-6 py-3"
-                  onClick={() => requestSort("transactions")}
-                >
-                  <div className="flex items-center">
-                    Transacciones
-                    <ArrowUpDown className="ml-1 h-4 w-4" />
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  className="cursor-pointer px-6 py-3"
-                  onClick={() => requestSort("amount")}
-                >
-                  <div className="flex items-center">
-                    Monto
-                    <ArrowUpDown className="ml-1 h-4 w-4" />
-                  </div>
-                </th>
+
                 <th scope="col" className="px-6 py-3">
                   <span className="sr-only">Acciones</span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      #{user.id}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {user.pagina}
-                    </td>
-                    <td className="px-6 py-4">{user.email}</td>
-                   
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          user.status === "Activo"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                            : user.status === "Inactivo"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                        }`}
-                      >
-                        {user.status === "Activo" && (
-                          <Check className="mr-1 h-3 w-3" />
-                        )}
-                        {user.status === "Inactivo" && (
-                          <X className="mr-1 h-3 w-3" />
-                        )}
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{user.transactions}</td>
-                    <td className="px-6 py-4 font-medium">
-                      $
-                      {user.amount.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="relative inline-block text-left">
-                        <div className="group">
-                          <button className="inline-flex items-center rounded-lg bg-transparent p-1 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
-                            <MoreHorizontal className="h-5 w-5" />
-                          </button>
-                          <div className="absolute right-0 top-[2px] z-10 hidden w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none group-hover:block dark:bg-gray-800">
-                            <div className="py-4">
-                              <ModalFormCampaing
-                                Content={
-                                  <div className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Crear Campaña
-                                  </div>
-                                }
-
-                                Campaing={user.pagina}
-                              />
-
-                              <a
-                                href="#"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </a>
-                              <a
-                                href="#"
-                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+              {paginas.length === 0 && !loading ? (
                 <tr className="bg-white dark:bg-gray-800">
                   <td
                     colSpan={9}
@@ -634,13 +627,91 @@ export default function Campañas() {
                     No se encontraron resultados
                   </td>
                 </tr>
+              ) : (
+                paginas.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  >
+                    <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      #{user.id}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {user.name}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          user.status === 1
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                            : user.status === 0
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                        }`}
+                      >
+                        {user.status === 1 && (
+                          <Check className="mr-1 h-3 w-3" />
+                        )}
+                        {user.status === 0 && <X className="mr-1 h-3 w-3" />}
+                        {user.status === 1
+                          ? "Activo"
+                          : user.status === 0
+                            ? "Inactivo"
+                            : "Pendiente"}
+                      </span>
+                    </td>
+
+                    <td className="z-50 px-6 py-4 text-right">
+                      <div className="relative inline-block text-left">
+                        <div className="group">
+                          <button className="inline-flex items-center rounded-lg bg-transparent p-1 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <MoreHorizontal className="h-5 w-5" />
+                          </button>
+                          <div className="absolute right-0 top-[10px] z-10 hidden w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none group-hover:block dark:bg-gray-800">
+                            <div className="py-4">
+                              <Link href={`/pagesmeta/campaigns?name=${user.name}&paginaId=${user.id}`}>
+                                <div className="flex cursor-pointer items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Crear Campaña
+                                </div>
+                              </Link>
+
+                              <ModalFormPagemetaUpdate
+                                btnCreate={
+                                  <button className=" w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Editar
+                                  </button>
+                                }
+                                datapage={user}
+                                onUpdate={() => setUpdateFlag((prev) => !prev)}
+
+                              />
+                              <button
+                                onClick={() => deleteData(user.id)}
+                                className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
         {/* Paginación */}
-        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+        {/* <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -728,7 +799,7 @@ export default function Campañas() {
               </nav>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

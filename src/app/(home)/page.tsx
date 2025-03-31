@@ -45,7 +45,7 @@ export default async function Home({ searchParams }: PropsType) {
           timeFrame={extractTimeFrame("used_devices")?.split(":")[1]}
         /> */}
 
-        <RegionLabels />
+        {/* <RegionLabels /> */}
 
         {/* <div className="col-span-12 grid xl:col-span-8">
           <Suspense fallback={<TopChannelsSkeleton />}>

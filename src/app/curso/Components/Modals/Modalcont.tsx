@@ -21,19 +21,21 @@ import {
 import SelectFlows from "../DropdownList/SelectFlows";
 import SelectBots from "../DropdownList/SelectBots";
 import SelectTemplates from "../DropdownList/SelectTemplates";
-import { Flow } from "@/types/flows";
+import { Flow, IBot } from "@/types/flows";
 import { Bots } from "@/types/flows";
 import { BotService, CursoService } from "@/services/Cursos-Api/PushAPI";
-import { ICurso } from '@/types/apiResponseCurso';
-
-
+import { ICurso } from "@/types/apiResponseCurso";
+import { data } from "framer-motion/client";
+import Swal from "sweetalert2";
 
 interface DataCurso {
-  Data: [];
+  IdCurso: number;
+  status: number;
   btn: ReactNode;
+  onUpdate?: () => void;
 }
 
-export default function App({ Data, btn }: DataCurso) {
+export default function App({ IdCurso, btn, status, onUpdate }: DataCurso) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [activeView, setActiveView] = useState<"course" | "platform" | "view">(
@@ -41,121 +43,114 @@ export default function App({ Data, btn }: DataCurso) {
   );
 
   const [flowSeleccionado, setFlowSeleccionado] = useState<Flow | null>(null);
-  const [botSeleccionado, setbotSeleccionado] = useState<Bots[] | null>(null);
+  const [botSeleccionado, setbotSeleccionado] = useState<IBot[] | null>(null);
   const [templateSeleccionado, settemplateSeleccionado] = useState<Flow | null>(
     null,
   );
-  
+
   const [curso, setCurso] = useState<ICurso | null>(null);
-  const handleSubmit2 = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
-    // Validaciones iniciales
+
+  const handleSubmit2 = async () => {
+    // Validaciones mejoradas con SweetAlert2
     if (!flowSeleccionado) {
-      alert("Por favor selecciona un flow");
+      Swal.fire({
+        icon: "warning",
+        title: "Error",
+        text: "Por favor selecciona un flow",
+        timer: 2000, // El mensaje desaparecerá después de 3 segundos
+        timerProgressBar: true, // Muestra una barra de progreso del timer
+        showConfirmButton: false, // Oculta el botón de confirmación
+      });
       return;
     }
-  
-    if (!botSeleccionado || botSeleccionado.length === 0) {
-      alert("Por favor selecciona al menos un bot");
+    if (!templateSeleccionado) {
+      Swal.fire({
+        icon: "warning",
+        title: "Error",
+        text: "Por favor selecciona un template",
+        timer: 2000, // El mensaje desaparecerá después de 3 segundos
+        timerProgressBar: true, // Muestra una barra de progreso del timer
+        showConfirmButton: false, // Oculta el botón de confirmación
+      });
       return;
     }
-  
+
+    // if (!botSeleccionado || botSeleccionado.length === 0) {
+    //   Swal.fire("Error", "Por favor selecciona al menos un bot", "warning");
+    //   return;
+    // }
+
     try {
-      // 1. Crear el curso primero
-      const datosCurso = {
-        cursoCCDId: 1,
-        nombre: "CUR001", // ¿tiene que ser dinamico ser dinámico?
+      // Mostrar loader mientras se procesa
+      // Swal.fire({
+      //   title: "Procesando...",
+      //   allowOutsideClick: false,
+      //   didOpen: () => Swal.showLoading(),
+      // });
+
+      // 1. Actualizar el curso existente (no crear nuevo)
+      const datosActualizados = {
         flowId: flowSeleccionado.id,
         flowNombre: flowSeleccionado.name,
-        templateNombre: flowSeleccionado.name,
+        templateNombre: templateSeleccionado?.name,
+        status: 1,
       };
-  
-      const cursoCreado = await CursoService.createCurso(datosCurso);
+
+      const cursoCreado = await CursoService.createCurso(
+        datosActualizados,
+        IdCurso,
+      );
       setCurso(cursoCreado);
-      // console.log('Curso creado:', cursoCreado);
-  
-      // 2. Crear las relaciones con bots
-      const botData = {
-        cursoId: cursoCreado.id, // Usamos el ID del curso recién creado
-        botsId: botSeleccionado.map(bot => bot.id),
-        botsNombre: botSeleccionado.map(bot => bot.name),
-      };
-  
-      const botsCreados = await BotService.createCurso(botData);
-      // console.log('Relaciones bot-curso creadas:', botsCreados);
-  
-      // 3. Feedback al usuario
-      alert("Datos enviados correctamente");
-      
-      // Opcional: Resetear estados
-      // setFlowSeleccionado(null);
-      // setBotSeleccionado([]);
-  
+
+      // 2. Actualizar relaciones con bots (reemplazar todas)
+      // const botData = {
+      //   cursoId: IdCurso, // Usamos el ID del curso recién creado
+      //   botsId: botSeleccionado.map((bot) => bot.id),
+      //   botsNombre: botSeleccionado.map((bot) => bot.name),
+      // };
+      // await BotService.createCurso(botData);
+
+      // 3. Notificar éxito y cerrar modal
+      Swal.fire({
+        icon: "success",
+        title: "!Flow y templates agregados  correctamente!",
+        text: "El curso se actualizó correctamente",
+        timer: 8000,
+        showConfirmButton: true,
+      });
+
+      // 4. Limpiar selecciones y cerrar modala
+
+      // 5. Actualizar vista principal (si está en un contexto)
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error:", error);
-      
-      let errorMessage = "Error al enviar los datos";
-      if (error instanceof Error) {
-        errorMessage += `: ${error.message}`;
-      } else if (typeof error === 'string') {
-        errorMessage += `: ${error}`;
-      }
-  
-      alert(errorMessage);
-      
-      // Opcional: Rollback o limpieza si falla la segunda operación
-      if (curso) {
-        // Podrías llamar a un servicio para eliminar el curso creado
-        // await CursoService.deleteCurso(curso.id);
-      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo completar la actualización",
+        footer: error instanceof Error ? error.message : "",
+      });
+
+      // Rollback visual (opcional)
+      // if (curso) {
+      //   setCurso(null); // O restaurar el estado anterior
+      // }
     }
   };
-
-  // Track which modal is open
-  const [openModal, setOpenModal] = useState<string | null>(null);
-
-  // Refs for modal click outside detection
-  const modalRefs = {
-    images: useRef<HTMLDivElement>(null),
-    videos: useRef<HTMLDivElement>(null),
-    documents: useRef<HTMLDivElement>(null),
-    audio: useRef<HTMLDivElement>(null),
-  };
-
-  // Handle click outside to close modal
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        openModal &&
-        modalRefs[openModal as keyof typeof modalRefs]?.current &&
-        !modalRefs[openModal as keyof typeof modalRefs].current?.contains(
-          event.target as Node,
-        )
-      ) {
-        setOpenModal(null);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [openModal]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would typically send the form data to your backend
-    console.log({
-      
-    });
+    console.log({});
   };
 
   return (
     <>
-      <div className="mt-[5px] size-fit" onClick={onOpen}>
-        {btn}{" "}
-      </div>
+      <button className="size-fit" onClick={onOpen}>
+        {btn}
+      </button>
       <Modal
         size="5xl"
         classNames={{
@@ -186,7 +181,7 @@ export default function App({ Data, btn }: DataCurso) {
                       >
                         <h2 className="text-xl font-semibold">Flows</h2>
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => setActiveView("platform")}
                         className={`border-b-2 pb-1 hover:border-DashCCd_blue ${
                           activeView === "platform"
@@ -195,7 +190,7 @@ export default function App({ Data, btn }: DataCurso) {
                         }`}
                       >
                         <h2 className="text-xl font-semibold">Bots</h2>
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => setActiveView("view")}
                         className={`border-b-2 pb-1 hover:border-DashCCd_blue ${
@@ -215,7 +210,7 @@ export default function App({ Data, btn }: DataCurso) {
                         <SelectFlows onSeleccion={setFlowSeleccionado} />
                       </div>
 
-                      <div
+                      {/* <div
                         className={
                           activeView === "platform" ? "block" : "hidden"
                         }
@@ -235,16 +230,18 @@ export default function App({ Data, btn }: DataCurso) {
                             </ul>
                           </div>
                         )}
-                      </div>
+                      </div> */}
 
                       <div
                         className={`h-full ${activeView === "view" ? "block" : "hidden"}`}
                       >
                         <div className="flex h-full flex-col justify-between">
-                          <SelectTemplates onSeleccion={setFlowSeleccionado} />
+                          <SelectTemplates
+                            onSeleccion={settemplateSeleccionado}
+                          />
 
-                          {flowSeleccionado && (
-                            <p>Nombre: {flowSeleccionado.name}</p>
+                          {templateSeleccionado && (
+                            <p>Nombre: {templateSeleccionado.name}</p>
                           )}
                           <button
                             onClick={handleSubmit2}

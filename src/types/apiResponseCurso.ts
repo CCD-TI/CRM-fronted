@@ -2,19 +2,12 @@
 export interface ICurso {
     id: number;
     nombre: string;
+    Nomenclatura: string;
+    status: number;
     flowId: number;
     flowNombre: string;
     templateNombre: string;
+    bots: Array<{ id: number; nombre: string }>; // Cambiado de `[]` a este tipo
     createdAt: string;
     updatedAt: string;
-  }
-
-
-  export interface Course {
-    id: number;
-    curso: string;
-    nomenclatura: string;
-    estado: string;
-    createdAt: string;
-    updatedAt: string;
-  }
+}

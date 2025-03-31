@@ -31,7 +31,7 @@ export async function OverviewCardsGroup() {
       />
     </Link>
 
-    <Link href="/Campanas">
+    <Link href="/pagesmeta">
     
       <OverviewCard
         label="Total Products"
