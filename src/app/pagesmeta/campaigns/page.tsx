@@ -392,7 +392,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                 />
               </div>
               <div className="flex flex-col">
-                <label htmlFor="">ID De Formulario:</label>
+                <label htmlFor="">Id de la campaña:</label>
                 <input
                   type="text"
                   value={formData.RedCampanaId}
@@ -498,7 +498,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                     onClick={() => requestSort("idFormulario")}
                   >
                     <div className="flex items-center">
-                      ID de Formulario
+                      Id de la campaña
                       <ArrowUpDown className="ml-1 h-4 w-4" />
                     </div>
                   </th>
@@ -554,12 +554,24 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                                 : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
                           }`}
                         >
-                          {campana.status}
+                          {campana.status === 1
+                          ? "Activo"
+                          : campana.status === 0
+                            ? "Inactivo"
+                            : "Pendiente"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end ">
-                          <Link href="/pagesmeta/campaigns/form">
+                        <div  className={`flex justify-end ${
+                                  campana.status === 1
+                                    ? ""
+                                    : "pointer-events-none opacity-50"
+                                } `} >
+                          <Link href={`/pagesmeta/campaigns/form?name=${campana.name}&paginaId=${campana.id}`}  className={
+                                  campana.status === 1
+                                    ? ""
+                                    : "pointer-events-none opacity-50"
+                                }>
                             <button
                               className="mr-3 flex items-center gap-2 rounded-xl bg-green-100 p-2 text-green-800 dark:bg-green-900 dark:text-green-300"
                               // onClick={() => handleEdit(curso)}

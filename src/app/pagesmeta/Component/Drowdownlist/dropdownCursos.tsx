@@ -160,25 +160,28 @@ import { IoCloseCircleOutline } from "react-icons/io5";
 import { TiArrowSortedDown } from "react-icons/ti";
 import { Bots, IBot } from "@/types/flows";
 import { searchBots } from "@/services/Cursos-Api/Dropdoplist.services";
+import { ICurso } from "@/types/apiResponseCurso";
+import { ViewCourse } from "@/services/Leads-api/Form";
+import { SearchCurso } from "@/services/Cursos-Api/PushAPI";
 
 interface DropDownListSend {
-  botSeleccionados?: IBot[]; // Bots seleccionados enviados desde el padre
-  onSeleccionBots: (bots: IBot[]) => void; // Función para actualizar bots en el padre
+  cursoSeleccionado?: ICurso[]; // Bots seleccionados enviados desde el padre
+  onSeleccionBots: (bots: ICurso[]) => void; // Función para actualizar bots en el padre
 }
 
-const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownListSend) => {
-  const [opciones, setOpciones] = useState<Bots[]>([]);
+const DropdownBuscador = ({ onSeleccionBots, cursoSeleccionado = [] }: DropDownListSend) => {
+  const [opciones, setOpciones] = useState<ICurso[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
   const [busqueda, setBusqueda] = useState<string>("");
   const [abierto, setAbierto] = useState<boolean>(false);
-  const [seleccionados, setSeleccionados] = useState<IBot[]>(botSeleccionados || []); // Inicializa con los bots seleccionados enviados desde el padre
+  const [seleccionados, setSeleccionados] = useState<ICurso[]>(cursoSeleccionado || []); // Inicializa con los bots seleccionados enviados desde el padre
 
   // Función para obtener datos de la API
   const obtenerDatos = async (terminoBusqueda = "") => {
     try {
       setCargando(true);
-      const bots = await searchBots(terminoBusqueda);
-      setOpciones(bots);
+      const cursos = await SearchCurso.Search(terminoBusqueda);
+      setOpciones(cursos);
     } catch (error) {
       console.error("Error al obtener datos:", error);
       setOpciones([]);
@@ -200,7 +203,7 @@ const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownLi
   // Mostrar el nombre del bot seleccionado en el input
   useEffect(() => {
     if (seleccionados.length === 1) {
-      setBusqueda(seleccionados[0].name || seleccionados[0].botNombre || "");
+      setBusqueda(seleccionados[0].nombre || seleccionados[0].Nomenclatura || "");
     } else {
       setBusqueda("");
     }
@@ -220,7 +223,7 @@ const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownLi
   };
 
   // Manejar selección de opción - ahora solo permite un bot seleccionado
-  const manejarSeleccion = (opcion: Bots) => {
+  const manejarSeleccion = (opcion: ICurso) => {
     setSeleccionados([opcion]); // Reemplaza la selección anterior con el nuevo bot
     setAbierto(false); // Cierra el dropdown después de seleccionar
   };
@@ -243,7 +246,7 @@ const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownLi
         <input
           type="text"
           className="w-full rounded-xl border p-2"
-          placeholder="Buscar Bot..."
+          placeholder="Buscar Curso..."
           value={busqueda}
           onChange={manejarCambioBusqueda}
           onClick={() => {
@@ -288,7 +291,7 @@ const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownLi
                 }`}
                 onClick={() => manejarSeleccion(opcion)}
               >
-                <span>{opcion.name}</span>
+                <span>{opcion.nombre}</span>
                 {estaSeleccionado(opcion.id) && (
                   <span className="text-blue-600">✓</span>
                 )}

@@ -567,7 +567,7 @@ export default function Campañas() {
         {error && <p className="text-center text-red-500">Error: {error}</p>}
         {/* Tabla */}
         <div className="overflow-x-auto">
-          <table className="h-[600px] w-full text-left text-sm text-gray-500 dark:text-gray-400">
+          <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
             <thead className="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th
@@ -673,23 +673,31 @@ export default function Campañas() {
                           </button>
                           <div className="absolute right-0 top-[10px] z-10 hidden w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none group-hover:block dark:bg-gray-800">
                             <div className="py-4">
-                              <Link href={`/pagesmeta/campaigns?name=${user.name}&paginaId=${user.id}`}>
-                                <div className="flex cursor-pointer items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  Crear Campaña
-                                </div>
-                              </Link>
+                              <div
+                                className={
+                                  user.status === 1
+                                    ? ""
+                                    : "pointer-events-none opacity-50"
+                                }
+                              >
+                                <Link
+                                  href={`/pagesmeta/campaigns?name=${user.name}&paginaId=${user.id}`}
+                                  className="flex gap-2 items-center w-full  px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Crear Campaña
+                                </Link>
+                              </div>
 
                               <ModalFormPagemetaUpdate
                                 btnCreate={
-                                  <button className=" w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                                  <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
                                     <Edit className="mr-2 h-4 w-4" />
                                     Editar
                                   </button>
                                 }
                                 datapage={user}
                                 onUpdate={() => setUpdateFlag((prev) => !prev)}
-
                               />
                               <button
                                 onClick={() => deleteData(user.id)}

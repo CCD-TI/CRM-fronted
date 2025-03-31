@@ -17,3 +17,13 @@ export interface campanas {
    
 }
 
+export interface Formulario {
+    id: number;
+    name: string;
+    RedFormularioId: string;
+    cursoId: number;
+    status: number;
+    createdAt: Date;
+   
+}
+

@@ -1,7 +1,6 @@
 "use client";
-import { CampaingUpdate } from "@/services/Leads-api/Campaing";
 import { PaginasCreate, PaginasUpdate } from "@/services/Leads-api/Paginas";
-import { campanas, paginas } from "@/types/leads/paginas";
+import { Formulario, paginas } from "@/types/leads/paginas";
 import {
   Modal,
   ModalContent,
@@ -17,7 +16,7 @@ import Swal from "sweetalert2";
 
 interface ModalFormProps {
   btnCreate: React.ReactNode;
-  datapage: campanas; // Cambio: ahora recibe un objeto de tipo paginas, no un array
+  datapage: Formulario; // Cambio: ahora recibe un objeto de tipo paginas, no un array
   onUpdate?: () => void;
 }
 
@@ -25,7 +24,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [formData, setFormData] = useState({ 
     name: "", 
-    RedCampanaId: "" 
+    RedPaginaId: "" 
   });
   const [automaticUpdates, setAutomaticUpdates] = useState(0);
   
@@ -34,7 +33,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
     if (datapage && Object.keys(datapage).length > 0) {
       setFormData({
         name: datapage.name || "",
-        RedCampanaId: datapage.RedCampanaId ? datapage.RedCampanaId.toString() : "",
+        RedPaginaId: datapage.RedFormularioId ? datapage.RedFormularioId.toString() : "",
       });
       setAutomaticUpdates(datapage.status || 0);
     }
@@ -53,7 +52,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
         });
         return;
       }
-      if (!formData.RedCampanaId) {
+      if (!formData.RedPaginaId) {
         Swal.fire({
           icon: "warning",
           title: "Error",
@@ -68,13 +67,12 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
       // Datos actualizados para enviar
       const datosActualizados = {
         name: formData.name,
-        RedCampanaId: Number(formData.RedCampanaId),
-        status: automaticUpdates,
-        paginaId: datapage.paginaId
+        RedPaginaId: Number(formData.RedPaginaId),
+        status: automaticUpdates
       };
 
       // Usamos el ID de la página que estamos editando
-      const cursoCreado = await CampaingUpdate.Update(datosActualizados, datapage.id);
+      const cursoCreado = await PaginasUpdate.Update(datosActualizados, datapage.id);
 
       Swal.fire({
         icon: "success",
@@ -85,7 +83,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
       });
 
       // Limpiar selecciones y cerrar modal
-      setFormData({ name: "", RedCampanaId: "" }); 
+      setFormData({ name: "", RedPaginaId: "" }); 
       
       // Actualizar vista principal (si está en un contexto)
       if (onUpdate) onUpdate();
@@ -106,7 +104,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "RedCampanaId" ? value.replace(/\D/g, "") : value, // Solo números en RedPaginaId
+      [name]: name === "RedPaginaId" ? value.replace(/\D/g, "") : value, // Solo números en RedPaginaId
     }));
   };
 
@@ -116,7 +114,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
 
   return (
     <>
-      <div className="size-fit" onClick={onOpen}>{btnCreate}</div>
+      <div onClick={onOpen}>{btnCreate}</div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
@@ -133,7 +131,6 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
               </ModalHeader>
               <ModalBody>
                 <div className="flex flex-col gap-4">
-                  <label htmlFor="">Nombre de la campaña:</label>
                   <input
                     type="text"
                     name="name"
@@ -145,13 +142,12 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
                   
                   {/* {datapage && <p className="text-sm text-gray-500">ID actual: {datapage.id}</p>}
                    */}
-                   <label htmlFor="">Id de la campaña:</label>
                   <input
                     type="number"
-                    name="RedCampanaId"
+                    name="RedPaginaId"
                     placeholder="ID de la Página"
                     className="w-full rounded border p-2"
-                    value={formData.RedCampanaId}
+                    value={formData.RedPaginaId}
                     onChange={handleChange}
                   />
                  

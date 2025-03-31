@@ -22,14 +22,16 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
+import SelectBots from "@/app/curso/Components/DropdownList/SelectBots";
+import { IBot } from "@/types/flows";
+import { DeleteCourse, FormCreate } from "@/services/Leads-api/Form";
+import DropdownCursos from "../../Component/Drowdownlist/dropdownCursos";
+import { ICurso } from "@/types/apiResponseCurso";
+import ModalUpdateForm from "../../Component/Modals/ModalUpdateForm";
+import { Formulario } from "@/types/leads/paginas";
 
-interface Curso {
-  id: number;
-  nombreCampana: string;
-  idFormulario: string;
-  fechaCreacion: string;
-  estado: "Activo" | "Inactivo" | "Pendiente";
-}
 
 interface PropsFormCampaing {
   Content: ReactNode;
@@ -37,47 +39,156 @@ interface PropsFormCampaing {
 }
 
 export default function Form({ Content, Campaing }: PropsFormCampaing) {
+   const searchParams = useSearchParams();
+    const name = searchParams.get("name");
+    const paginaId = Number(searchParams.get("paginaId"));
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [cursos, setCursos] = useState<Curso[]>([
-    {
-      id: 1,
-      nombreCampana: "Desarrollo Web Full Stack",
-      idFormulario: "FORM-WEB-001",
-      fechaCreacion: "2023-05-15",
-      estado: "Activo",
-    },
-    {
-      id: 2,
-      nombreCampana: "Python para Ciencia de Datos",
-      idFormulario: "FORM-PY-002",
-      fechaCreacion: "2023-06-20",
-      estado: "Activo",
-    },
-    {
-      id: 3,
-      nombreCampana: "JavaScript Avanzado",
-      idFormulario: "FORM-JS-003",
-      fechaCreacion: "2023-07-10",
-      estado: "Pendiente",
-    },
-    {
-      id: 4,
-      nombreCampana: "React Native para Móviles",
-      idFormulario: "FORM-RN-004",
-      fechaCreacion: "2023-08-05",
-      estado: "Inactivo",
-    },
-  ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState();
+  const [bots, setIsBots] = useState<IBot[]>([]);
+  const [curso, setIsCurso] = useState<ICurso[]>([]);
+  const [updateFlag, setUpdateFlag] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Estado para el curso seleccionado para editar
-  const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null);
+  const [selectedCurso, setSelectedCurso] = useState<Formulario | null>(null);
 
   // Estado para el formulario
   const [formData, setFormData] = useState({
-    nombreCampana: "",
-    idFormulario: "",
+    name: "",
+    idform: "",
   });
+
+
+   const sendDatapage = async () => {
+      try {
+        if (!formData.name) {
+          Swal.fire({
+            icon: "warning",
+            title: "Error",
+            text: "Por favor designe el nombre",
+            timer: 2000, // El mensaje desaparecerá después de 3 segundos
+            timerProgressBar: true, // Muestra una barra de progreso del timer
+            showConfirmButton: false, // Oculta el botón de confirmación
+          });
+          return;
+        }
+        if (!formData.idform) {
+          Swal.fire({
+            icon: "warning",
+            title: "Error",
+            text: "Por favor digite el ID de la Campaña",
+            timer: 2000, // El mensaje desaparecerá después de 3 segundos
+            timerProgressBar: true, // Muestra una barra de progreso del timer
+            showConfirmButton: false, // Oculta el botón de confirmación
+          });
+          return;
+        }
+
+        const botId = bots.length > 0 ? bots[0].id : null;
+    
+        // Obtener el ID del curso seleccionado (asumiendo que tienes un estado para esto)
+        const cursoId = curso.length > 0 ? curso[0].id : null;
+        // 1. Actualizar el curso existente (no crear nuevo)
+        const dataForm = {
+          name: formData.name,
+          RedFormularioId:formData.idform,
+          cursoId: cursoId,
+          campanaId:Number(paginaId),
+          botId: botId
+        
+        };
+  
+        const cursoCreado = await FormCreate.create(dataForm);
+        //   setCurso(cursoCreado);
+  
+        Swal.fire({
+          icon: "success",
+          title: "!Pagina agregada correctamente!",
+          text: "Buen trabajo!!",
+          timer: 8000,
+          showConfirmButton: true,
+        });
+  
+        // 4. Limpiar selecciones y cerrar modala
+        setFormData({ name: "", idform: "" });
+        // 5. Actualizar vista principal (si está en un contexto)
+        setUpdateFlag((prev) => !prev); // Cambia entre true/false
+      } catch (error) {
+        console.error("Error:", error);
+  
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo completar la actualización",
+          footer: error instanceof Error ? error.message : "",
+        });
+  
+        // Rollback visual (opcional)
+        // if (curso) {
+        //   setCurso(null); // O restaurar el estado anterior
+        // }
+      }
+    };
+  
+
+
+     const deleteData = async (Idpagina: number) => {
+        // Eliminé el parámetro 'e' ya que no es necesario
+        // Paso 1: Confirmación con SweetAlert
+        const confirmation = await Swal.fire({
+          title: "¿Estás seguro?",
+          text: "¡No podrás revertir esta acción!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+        });
+    
+        // Si el usuario cancela, salimos de la función
+        if (!confirmation.isConfirmed) return;
+    
+        try {
+          // Paso 2: Mostrar loader mientras se procesa
+          // Swal.fire({
+          //   title: "Eliminando...",
+          //   allowOutsideClick: false,
+          //   didOpen: () => Swal.showLoading(),
+          // });
+    
+          // Paso 3: Actualizar el curso
+          const datosActualizados = {
+            flowId: 0,
+            flowNombre: "null",
+            templateNombre: "null",
+            status: 0,
+          };
+    
+          // await CursoService.createCurso(datosActualizados, IdCurso);
+          await DeleteCourse.delete(Idpagina);
+          setUpdateFlag((prev) => !prev); // Cambia entre true/false
+    
+          // Paso 4: Notificar éxito
+          await Swal.fire({
+            icon: "success",
+            title: "¡Eliminado!",
+            text: "Los datos se eliminaron correctamente",
+            showConfirmButton: true,
+          });
+        } catch (error) {
+          console.error("Error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "No se pudo completar la eliminación",
+            footer: error instanceof Error ? error.message : "",
+          });
+        }
+      };
+
+
 
   // Estado para la búsqueda
   const [searchTerm, setSearchTerm] = useState("");
@@ -87,7 +198,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
 
   // Estado para la ordenación
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Curso | null;
+    key: keyof Formulario | null;
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
 
@@ -105,57 +216,57 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
   };
 
   // Abrir modal para editar
-  const handleEdit = (curso: Curso) => {
-    setSelectedCurso(curso);
-    setFormData({
-      nombreCampana: curso.nombreCampana,
-      idFormulario: curso.idFormulario,
-    });
-    setIsModalOpen(true);
-  };
+  // const handleEdit = (curso: Curso) => {
+  //   setSelectedCurso(curso);
+  //   setFormData({
+  //     nombreCampana: curso.nombreCampana,
+  //     idFormulario: curso.idFormulario,
+  //   });
+  //   setIsModalOpen(true);
+  // };
 
   // Manejar envío del formulario
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    // Validar que los campos no estén vacíos
-    if (!formData.nombreCampana.trim() || !formData.idFormulario.trim()) {
-      alert("Por favor, complete todos los campos");
-      return;
-    }
+  //   // Validar que los campos no estén vacíos
+  //   if (!formData.nombreCampana.trim() || !formData.idFormulario.trim()) {
+  //     alert("Por favor, complete todos los campos");
+  //     return;
+  //   }
 
-    if (selectedCurso) {
-      // Actualizar curso existente
-      const updatedCursos = cursos.map((curso) =>
-        curso.id === selectedCurso.id
-          ? {
-              ...curso,
-              nombreCampana: formData.nombreCampana,
-              idFormulario: formData.idFormulario,
-            }
-          : curso,
-      );
-      setCursos(updatedCursos);
-    }
+  //   if (selectedCurso) {
+  //     // Actualizar curso existente
+  //     const updatedCursos = cursos.map((curso) =>
+  //       curso.id === selectedCurso.id
+  //         ? {
+  //             ...curso,
+  //             nombreCampana: formData.nombreCampana,
+  //             idFormulario: formData.idFormulario,
+  //           }
+  //         : curso,
+  //     );
+  //     setCursos(updatedCursos);
+  //   }
 
-    // Cerrar modal y resetear formulario
-    setIsModalOpen(false);
-    setSelectedCurso(null);
-    setFormData({
-      nombreCampana: "",
-      idFormulario: "",
-    });
-  };
+  //   // Cerrar modal y resetear formulario
+  //   setIsModalOpen(false);
+  //   setSelectedCurso(null);
+  //   setFormData({
+  //     nombreCampana: "",
+  //     idFormulario: "",
+  //   });
+  // };
 
   // Función para eliminar un curso
-  const handleDelete = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar este curso?")) {
-      setCursos(cursos.filter((curso) => curso.id !== id));
-    }
-  };
+  // const handleDelete = (id: number) => {
+  //   if (confirm("¿Está seguro de que desea eliminar este curso?")) {
+  //     setCursos(cursos.filter((curso) => curso.id !== id));
+  //   }
+  // };
 
   // Función para ordenar
-  const requestSort = (key: keyof Curso) => {
+  const requestSort = (key: keyof Formulario) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -164,52 +275,52 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
   };
 
   // Filtrar y ordenar cursos
-  const filteredAndSortedCursos = cursos
-    .filter((curso) => {
-      // Filtrar por término de búsqueda
-      const matchesSearch =
-        curso.nombreCampana.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        curso.idFormulario.toLowerCase().includes(searchTerm.toLowerCase());
+  // const filteredAndSortedCursos = cursos
+  //   .filter((curso) => {
+  //     // Filtrar por término de búsqueda
+  //     const matchesSearch =
+  //       curso.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       curso.RedFormularioId.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Filtrar por estado
-      const matchesEstado =
-        estadoFilter === "todos" ||
-        curso.estado.toLowerCase() === estadoFilter.toLowerCase();
+  //     // Filtrar por estado
+  //     const matchesEstado =
+  //       estadoFilter === "todos" ||
+  //       String(curso.status).toLowerCase() === estadoFilter.toLowerCase();
 
-      return matchesSearch && matchesEstado;
-    })
-    .sort((a, b) => {
-      // Si no hay configuración de ordenación, no ordenar
-      if (!sortConfig.key) return 0;
+  //     return matchesSearch && matchesEstado;
+  //   })
+  //   .sort((a, b) => {
+  //     // Si no hay configuración de ordenación, no ordenar
+  //     if (!sortConfig.key) return 0;
 
-      // Ordenar según la configuración
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
+  //     // Ordenar según la configuración
+  //     if (a[sortConfig.key] < b[sortConfig.key]) {
+  //       return sortConfig.direction === "asc" ? -1 : 1;
+  //     }
+  //     if (a[sortConfig.key] > b[sortConfig.key]) {
+  //       return sortConfig.direction === "asc" ? 1 : -1;
+  //     }
+  //     return 0;
+  //   });
 
   // Paginación
-  const paginatedCursos = filteredAndSortedCursos.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  // const paginatedCursos = filteredAndSortedCursos.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage,
+  // );
 
   // Total de páginas
-  const totalPages = Math.ceil(filteredAndSortedCursos.length / itemsPerPage);
+  // const totalPages = Math.ceil(filteredAndSortedCursos.length / itemsPerPage);
 
   return (
     <>
       <div>
         <div className="flex size-full flex-col gap-6 py-10">
           <h1 className="text-3xl">
-            <b>CAMPAÑA:</b> {Campaing}
+            <b>CAMPAÑA:</b> {name}
           </h1>
 
-          <form action="">
+          <div >
             <div className="grid grid-cols-2 gap-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex flex-col">
                 <label htmlFor="">Nombre Del Formulario:</label>
@@ -217,35 +328,21 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
               </div>
               <div className="flex flex-col">
                 <label htmlFor="">Id Del Formulario:</label>
-                <input disabled type="text" className="rounded-xl border-2 p-2" />
+                <input  type="text" className="rounded-xl border-2 p-2" />
               </div>
               <div className="flex flex-col">
                 <label htmlFor="">Campaña:</label>
-                <input disabled type="text" className="rounded-xl border-2 p-2" />
+                <input disabled value={name || ""} type="text" className="rounded-xl border-2 p-2" />
               </div>
-              <div className="flex flex-col">
-                <label htmlFor="">Curso:</label>
-                <input
-                  disabled
-                  type="text"
-                  className="rounded-xl border-2 p-2"
-                />
-              </div>
+              <DropdownCursos onSeleccionBots={setIsCurso} />
          
-              <div className="flex flex-col">
-                <label htmlFor="">Asignar bot:</label>
-                <input
-                  disabled
-                  type="text"
-                  className="rounded-xl border-2 p-2"
-                />
-              </div>
-              <button className="mx-auto w-[200px] rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+              <SelectBots onSeleccionBots={setIsBots } />
+              <button onClick={sendDatapage} className="mx-auto w-[200px] rounded-xl border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                 {" "}
                 Crear Formulario
               </button>
             </div>
-          </form>
+          </div>
         </div>
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           {/* Cabecera de la tabla */}
@@ -308,7 +405,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("nombreCampana")}
+                    onClick={() => requestSort("name")}
                   >
                     <div className="flex items-center">
                       Nombre del Formulario
@@ -318,7 +415,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("idFormulario")}
+                    onClick={() => requestSort("RedFormularioId")}
                   >
                     <div className="flex items-center">
                       ID de Formulario
@@ -328,7 +425,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("fechaCreacion")}
+                    onClick={() => requestSort("createdAt")}
                   >
                     <div className="flex items-center">
                       Fecha de Creación
@@ -338,7 +435,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("estado")}
+                    onClick={() => requestSort("status")}
                   >
                     <div className="flex items-center">
                       Estado
@@ -351,7 +448,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                 </tr>
               </thead>
               <tbody>
-                {paginatedCursos.length > 0 ? (
+                {/* {paginatedCursos.length > 0 ? (
                   paginatedCursos.map((curso) => (
                     <tr
                       key={curso.id}
@@ -361,36 +458,36 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                         #{curso.id}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                        {curso.nombreCampana}
+                        {curso.name}
                       </td>
-                      <td className="px-6 py-4">{curso.idFormulario}</td>
-                      <td className="px-6 py-4">{curso.fechaCreacion}</td>
+                      <td className="px-6 py-4">{curso.RedFormularioId}</td>
+                      <td className="px-6 py-4">{new Date(curso.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            curso.estado === "Activo"
+                            curso.status === 1
                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              : curso.estado === "Inactivo"
+                              : curso.status === 0
                                 ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
                                 : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
                           }`}
                         >
-                          {curso.estado}
+                          {curso.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">
-
-                          <button
+                        <ModalUpdateForm btnCreate={ <button
                             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                            onClick={() => handleEdit(curso)}
+                            // onClick={() => handleEdit(curso)}
                           >
                             <Edit className="h-5 w-5" />
-                          </button>
+                          </button>} datapage={curso}/>
+                         
 
                           <button
                             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                            onClick={() => handleDelete(curso.id)}
+                            onClick={() => deleteData(curso.id)}
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>
@@ -407,103 +504,12 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                       No se encontraron cursos
                     </td>
                   </tr>
-                )}
+                )} */}
               </tbody>
             </table>
           </div>
 
-          {/* Paginación */}
-          {filteredAndSortedCursos.length > 0 && (
-            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700">
-              <div className="flex flex-1 justify-between sm:hidden">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                >
-                  Siguiente
-                </button>
-              </div>
-              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Mostrando{" "}
-                    <span className="font-medium">
-                      {(currentPage - 1) * itemsPerPage + 1}
-                    </span>{" "}
-                    a{" "}
-                    <span className="font-medium">
-                      {Math.min(
-                        currentPage * itemsPerPage,
-                        filteredAndSortedCursos.length,
-                      )}
-                    </span>{" "}
-                    de{" "}
-                    <span className="font-medium">
-                      {filteredAndSortedCursos.length}
-                    </span>{" "}
-                    resultados
-                  </p>
-                </div>
-                <div>
-                  <nav
-                    className="relative z-0 inline-flex -space-x-px rounded-md shadow-sm"
-                    aria-label="Pagination"
-                  >
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                    >
-                      <span className="sr-only">Anterior</span>
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNumber = i + 1;
-                      return (
-                        <button
-                          key={pageNumber}
-                          onClick={() => setCurrentPage(pageNumber)}
-                          className={`relative inline-flex items-center border px-4 py-2 ${
-                            currentPage === pageNumber
-                              ? "z-10 border-blue-500 bg-blue-50 text-blue-600 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-400"
-                              : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                          } text-sm font-medium`}
-                        >
-                          {pageNumber}
-                        </button>
-                      );
-                    })}
-
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                    >
-                      <span className="sr-only">Siguiente</span>
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+       
         </div>
 
         {/* Modal para editar curso */}
