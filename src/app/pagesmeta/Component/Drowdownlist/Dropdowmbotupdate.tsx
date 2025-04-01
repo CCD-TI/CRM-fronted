@@ -6,7 +6,7 @@ import { IBot } from "@/types/flows";
 
 interface DropdownBotProps {
   botIdInicial?: number | null; // Solo recibe el ID del bot
-  onBotSeleccionado: (bot: IBot | null) => void; // Devuelve el objeto completo
+  onBotSeleccionado: (bot: IBot | null) => void; // Devuelve el objeto completo o null
   placeholder?: string;
 }
 

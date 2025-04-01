@@ -3,21 +3,13 @@ import Swal from "sweetalert2";
 import {
   CursoService,
   deletebot,
-  ViewCurso,
-SearchCurso 
-
+  SearchCurso,
 } from "@/services/Cursos-Api/PushAPI";
 
-import {
-  Search,
-  Edit,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Search, Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import Modalcont from "./Modals/Modalcont";
 import { FaChevronDown, FaChevronRight, FaPlusCircle } from "react-icons/fa";
-import Modalcreate from "@/app/curso/Components/Modals/ModalCreate"
+import Modalcreate from "@/app/curso/Components/Modals/ModalCreate";
 import ModalEdit from "./Modals/ModalEdit";
 import { ICurso } from "@/types/apiResponseCurso";
 
@@ -33,40 +25,37 @@ const AdminCursos = () => {
   const [orderBy, setOrderBy] = useState("fechaCreacion");
   const [orderDirection, setOrderDirection] = useState("desc");
   const [updateFlag, setUpdateFlag] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  
-
-
-  const fetchCursos = async (term = '') => {
+  const fetchCursos = async (term = "") => {
     setLoading(true);
     setError(null);
     try {
       const data = await SearchCurso.Search(term);
       setCursos(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-      console.error('Error al cargar cursos:', err);
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      console.error("Error al cargar cursos:", err);
     } finally {
       setLoading(false);
     }
   };
 
-useEffect(() => {
-  const timer = setTimeout(() => {
-    fetchCursos(searchTerm);
-  }, 300);
-  
-  return () => clearTimeout(timer);
-}, [searchTerm, updateFlag]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCursos(searchTerm);
+    }, 300);
 
-  const handleSearchChange = (e: { target: { value: any; }; }) => {
+    return () => clearTimeout(timer);
+  }, [searchTerm, updateFlag]);
+
+  const handleSearchChange = (e: { target: { value: any } }) => {
     setSearchTerm(e.target.value);
   };
-  
+
   const deleteData = async (IdCurso: number) => {
     // Eliminé el parámetro 'e' ya que no es necesario
     // Paso 1: Confirmación con SweetAlert
@@ -85,7 +74,6 @@ useEffect(() => {
     if (!confirmation.isConfirmed) return;
 
     try {
-      
       await deletebot.EliminarBot(IdCurso);
       setUpdateFlag((prev) => !prev); // Cambia entre true/false
 
@@ -107,8 +95,6 @@ useEffect(() => {
     }
   };
 
-
-
   // const handleSort = (campo: React.SetStateAction<string>) => {
   //   if (orderBy === campo) {
   //     setOrderDirection(orderDirection === "asc" ? "desc" : "asc");
@@ -127,8 +113,6 @@ useEffect(() => {
   //     <ChevronDown className="ml-1 h-4 w-4" />
   //   );
   // };
-
-  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,21 +137,23 @@ useEffect(() => {
                 onChange={handleSearchChange}
               />
             </div>
-            <Modalcreate 
-              btnTrigger={ <button className="bg-blue-600 text-white p-2 px-4 rounded-xl">
-                Crear curso
-              </button>}
+            <Modalcreate
+              btnTrigger={
+                <button className="rounded-xl bg-blue-600 p-2 px-4 text-white">
+                  Crear curso
+                </button>
+              }
               // Objeto completo
-             
-              onUpdate={() => setUpdateFlag((prev) => !prev)}
 
+              onUpdate={() => setUpdateFlag((prev) => !prev)}
             />
-           
           </div>
         </div>
 
         {/* Estado de carga y error */}
-        {loading && <p className="text-center text-gray-500">Cargando cursos...</p>}
+        {loading && (
+          <p className="text-center text-gray-500">Cargando cursos...</p>
+        )}
         {error && <p className="text-center text-red-500">Error: {error}</p>}
 
         {/* Table */}
@@ -241,7 +227,7 @@ useEffect(() => {
                       </div>
                       <div className="col-start-5">
                         <div className="flex w-[60px] items-center justify-end gap-2">
-                          {curso.status === 1 ? (
+                          {/* {curso.status === 1 ? (
                             <ModalEdit
                               IdCurso={curso.id}
                               btn={
@@ -258,13 +244,22 @@ useEffect(() => {
                               status={curso.status}
                               onUpdate={() => setUpdateFlag((prev) => !prev)}
                             />
-                          )}
+                          )} */}
+
+                          <ModalEdit
+                            IdCurso={curso.id}
+                            btn={
+                              <Edit className="h-5 w-5 text-blue-600 hover:text-blue-900" />
+                            }
+                            onUpdate={() => setUpdateFlag((prev) => !prev)}
+                          />
                           <button
                             onClick={() => deleteData(curso.id)}
-                            className={`text-red-600 hover:text-red-900 ${
-                              curso.status === 0 ? "hidden" : "block"
-                            }`}
+                            className={`text-red-600 hover:text-red-900 `}
                           >
+                            {/* ${
+                              curso.status === 0 ? "hidden" : "block"
+                            } */}
                             <Trash2 className="h-5 w-5" />
                           </button>
                         </div>

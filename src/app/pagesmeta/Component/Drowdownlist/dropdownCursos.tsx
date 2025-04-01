@@ -166,7 +166,7 @@ import { SearchCurso } from "@/services/Cursos-Api/PushAPI";
 
 interface DropDownListSend {
   cursoSeleccionado?: ICurso[]; // Bots seleccionados enviados desde el padre
-  onSeleccionBots: (bots: ICurso[]) => void; // Función para actualizar bots en el padre
+  onSeleccionBots: (curso: ICurso) => void; // Función para actualizar bots en el padre
 }
 
 const DropdownBuscador = ({ onSeleccionBots, cursoSeleccionado = [] }: DropDownListSend) => {
@@ -197,13 +197,15 @@ const DropdownBuscador = ({ onSeleccionBots, cursoSeleccionado = [] }: DropDownL
 
   // Actualizar la lista de seleccionados en el padre cuando cambie
   useEffect(() => {
-    onSeleccionBots(seleccionados);
-  }, [seleccionados, onSeleccionBots]);
+      if (seleccionados.length === 1) {
+        onSeleccionBots(seleccionados[0]); // Pass the first selected course
+      }
+    }, [seleccionados, onSeleccionBots]);
 
   // Mostrar el nombre del bot seleccionado en el input
   useEffect(() => {
     if (seleccionados.length === 1) {
-      setBusqueda(seleccionados[0].nombre || seleccionados[0].Nomenclatura || "");
+      setBusqueda(seleccionados[0].nombre || seleccionados[0].nomenclatura || "");
     } else {
       setBusqueda("");
     }
@@ -246,7 +248,7 @@ const DropdownBuscador = ({ onSeleccionBots, cursoSeleccionado = [] }: DropDownL
         <input
           type="text"
           className="w-full rounded-xl border p-2"
-          placeholder="Buscar Bot..."
+          placeholder="Buscar Cursos..."
           value={busqueda}
           onChange={manejarCambioBusqueda}
           onClick={() => {

@@ -163,7 +163,7 @@ import { searchBots } from "@/services/Cursos-Api/Dropdoplist.services";
 
 interface DropDownListSend {
   botSeleccionados?: IBot[]; // Bots seleccionados enviados desde el padre
-  onSeleccionBots: (bots: IBot[]) => void; // Función para actualizar bots en el padre
+  onSeleccionBots: (bots: IBot) => void; // Función para actualizar bots en el padre
 }
 
 const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownListSend) => {
@@ -194,7 +194,9 @@ const DropdownBuscador = ({ onSeleccionBots, botSeleccionados = [] }: DropDownLi
 
   // Actualizar la lista de seleccionados en el padre cuando cambie
   useEffect(() => {
-    onSeleccionBots(seleccionados);
+    if (seleccionados.length === 1) {
+      onSeleccionBots(seleccionados[0]); // Pass the first selected course
+    }
   }, [seleccionados, onSeleccionBots]);
 
   // Mostrar el nombre del bot seleccionado en el input

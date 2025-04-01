@@ -1,6 +1,6 @@
 import { paginas } from "@/types/leads/paginas";
 
-const API_URL = "http://localhost:8003"; // Ajusta la URL base
+const API_URL = "http://localhost:8000"; // Ajusta la URL base
 
 //search data
 
@@ -10,7 +10,7 @@ export const PaginasView = {
     try {
       const encondeparam = encodeURIComponent(Params);
       const response = await fetch(
-        `${API_URL}/pagina/search?q=${encondeparam}`,
+        `${API_URL}/api/leads-service/pagina/search?q=${encondeparam}`,
         {
           method: "GET",
           headers: {

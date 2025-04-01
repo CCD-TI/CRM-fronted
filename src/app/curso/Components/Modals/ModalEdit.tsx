@@ -6,6 +6,7 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
+  Switch,
 } from "@heroui/react";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -44,27 +45,20 @@ interface IBotApp {
   botNombre: string;
 }
 
-export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
+export default function App({ IdCurso, btn, onUpdate }: DataCurso) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [activeView, setActiveView] = useState<"course" | "platform" | "view">(
     "course",
   );
 
- 
-
+  const [automaticUpdates, setAutomaticUpdates] = useState(0);
   const [flowSeleccionado, setFlowSeleccionado] = useState<Flow | null>(null);
-  const [botSeleccionado, setbotSeleccionado] = useState<IBot[] | undefined>(
-    undefined,
-  );
   const [templateSeleccionado, setTemplateseleccionado] = useState<Flow | null>(
     null,
   );
   const [curso, setCurso] = useState<ICurso | null>(null);
 
-
   const handleSubmit2 = async () => {
-      
-  
     // Validaciones mejoradas con SweetAlert2
     if (!flowSeleccionado) {
       Swal.fire({
@@ -73,7 +67,7 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
         text: "Por favor selecciona un flow",
         timer: 2000, // El mensaje desaparecerá después de 3 segundos
         timerProgressBar: true, // Muestra una barra de progreso del timer
-        showConfirmButton: false // Oculta el botón de confirmación
+        showConfirmButton: false, // Oculta el botón de confirmación
       });
       return;
     }
@@ -84,7 +78,7 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
         text: "Por favor selecciona un template",
         timer: 2000, // El mensaje desaparecerá después de 3 segundos
         timerProgressBar: true, // Muestra una barra de progreso del timer
-        showConfirmButton: false // Oculta el botón de confirmación
+        showConfirmButton: false, // Oculta el botón de confirmación
       });
       return;
     }
@@ -107,7 +101,7 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
         flowId: flowSeleccionado.id,
         flowNombre: flowSeleccionado.name,
         templateNombre: templateSeleccionado?.name,
-        status: 1,
+        status: automaticUpdates
       };
 
       const cursoCreado = await CursoService.createCurso(
@@ -134,7 +128,7 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
       });
 
       // 4. Limpiar selecciones y cerrar modala
-      
+
       // 5. Actualizar vista principal (si está en un contexto)
       if (onUpdate) onUpdate();
     } catch (error) {
@@ -159,6 +153,8 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
       try {
         const data = await ViewCursoId.VieId(IdCurso);
         setCurso(data);
+        setAutomaticUpdates(data.status || 0);
+
         // setbotSeleccionado((data.bots as unknown as IBotApp[]).map(bot => ({
         //   id: bot.botId,
         //   name: bot.botNombre
@@ -177,6 +173,10 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
     e.preventDefault();
   };
 
+    const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAutomaticUpdates(e.target.checked ? 1 : 0);
+    };
+
   return (
     <>
       <div className="size-fit" onClick={onOpen}>
@@ -194,6 +194,17 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
         <ModalContent className="max-h-[800px]">
           {(onClose) => (
             <>
+              {" "}
+              <ModalHeader className="m-3 flex items-center justify-between">
+                Actualizar
+                <Switch
+                  color="primary"
+                  isSelected={automaticUpdates === 1}
+                  onChange={handleSwitchChange}
+                >
+                  {automaticUpdates === 1 ? "Activo" : "Desactivado"}
+                </Switch>
+              </ModalHeader>
               <ModalBody className="flex flex-col">
                 <div className="h-[500px]">
                   <form
@@ -294,8 +305,9 @@ export default function App({ IdCurso, btn, onUpdate  }: DataCurso) {
                             </div>
 
                             <button
-                            onClick={handleSubmit2}
-                             className="mt-4 rounded-2xl bg-blue-500 p-4 text-white">
+                              onClick={handleSubmit2}
+                              className="mt-4 rounded-2xl bg-blue-500 p-4 text-white"
+                            >
                               Actualizar
                             </button>
                           </div>

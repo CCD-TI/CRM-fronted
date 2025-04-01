@@ -13,6 +13,8 @@ import {
 } from "@heroui/react";
 import Swal from "sweetalert2";
 import { CreateCurso } from "@/services/Cursos-Api/PushAPI";
+import { Flow } from "@/types/flows";
+import SelectFlows from "../DropdownList/SelectFlows";
 
 interface propsData{
     btnTrigger: ReactNode
@@ -21,6 +23,8 @@ interface propsData{
 
 export default function CursoForm({btnTrigger,onUpdate}:propsData) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [flow, setFlow]= useState<Flow | null>(null)
+  const [template, settemplateNombre]= useState<Flow | null>(null)
   const [formData, setFormData] = useState({
     nombre: "",
     Nomenclatura: "",
@@ -69,11 +73,18 @@ export default function CursoForm({btnTrigger,onUpdate}:propsData) {
         const datosActualizados = {
             nombre:formData.nombre,
             nomenclatura:formData.Nomenclatura ,
+            flowId: flow?.id,
+            flowNombre: flow?.name,
+            templateNombre: template?.name,
+            status: 1
           
         };
   
         const cursoCreado = await CreateCurso.create(datosActualizados);
-        
+        setFormData({
+          nombre: "",
+          Nomenclatura: "",
+        });
         // setCurso(cursoCreado);
   
         // 2. Actualizar relaciones con bots (reemplazar todas)
@@ -179,32 +190,8 @@ export default function CursoForm({btnTrigger,onUpdate}:propsData) {
                   placeholder="Ej: MKT-101"
                 />
                 
-                {/* <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="ID del Flow"
-                    name="flowId"
-                    type="number"
-                    value={formData.flowId.toString()}
-                    onChange={handleNumberChange}
-                    placeholder="Ej: 12345"
-                  />
-                  
-                  <Input
-                    label="Nombre del Flow"
-                    name="flowNombre"
-                    value={formData.flowNombre}
-                    onChange={handleChange}
-                    placeholder="Ej: Flujo principal"
-                  />
-                </div>
-                
-                <Input
-                  label="Nombre del Template"
-                  name="templateNombre"
-                  value={formData.templateNombre}
-                  onChange={handleChange}
-                  placeholder="Ej: Plantilla básica" */}
-                {/* /> */}
+                 <SelectFlows  onSeleccion={setFlow}/>
+                 <SelectFlows  onSeleccion={settemplateNombre}/>
               </ModalBody>
               
               <ModalFooter>

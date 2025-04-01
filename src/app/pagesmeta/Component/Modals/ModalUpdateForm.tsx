@@ -34,8 +34,8 @@ export default function ModalForm({
   onUpdate,
 }: ModalFormProps) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [cursos, setCursos] = useState<ICurso[] | undefined>(undefined);
-  const [bots, setBots] = useState<IBot[] | undefined>(undefined);
+  const [cursos, setCursos] = useState<ICurso | null>(null);
+  const [bots, setBots] = useState<IBot | null>(null);
   const [formData, setFormData] = useState({
     id: 0, // Added id property
     name: "",
@@ -59,9 +59,10 @@ export default function ModalForm({
         botId: datapage.botId,
         cursoId: datapage.cursoId,
         campanaId: datapage.campanaId,
+        
       });
       setAutomaticUpdates(datapage.status || 0);
-      console.log("hola", datapage);
+      // console.log("hola", datapage);
     }
   }, [datapage]);
 
@@ -94,11 +95,11 @@ export default function ModalForm({
       const datosActualizados = {
         name: formData.name,
         RedFormularioId: formData.RedFormularioId,
-        cursoId: formData.cursoId,
+        cursoId: cursos?.id ?? formData.cursoId,
         campana: formData.campanaId,
-        botId: formData.botId,
+        botId: bots?.id?? formData.botId,
         status: automaticUpdates,
-        id: formData.id,
+        id: formData.campanaId
       };
 
       // Usamos el ID de la página que estamos editando
@@ -166,13 +167,13 @@ export default function ModalForm({
                   />
                   <label htmlFor="curso">Curso:</label>
                   <DropdowmListUpdate
-                    onCursoSeleccionado={(curso) => setCursos(curso ? [curso] : [])}
+                    onCursoSeleccionado={ setCursos}
                     idCursoInicial={formData.cursoId}
                   />
 
-                  <label htmlFor="bot">Bot:</label>
+                  <label htmlFor="bot">Bot:{formData.botId}</label>
                   <Dropdowmbotupdate
-                   onBotSeleccionado={(bot) => setBots(bot ? [bot] : [])}
+                   onBotSeleccionado={setBots}
                    botIdInicial={formData.botId}
                   />
                   {/* {datapage && <p className="text-sm text-gray-500">ID actual: {datapage.id}</p>}

@@ -35,6 +35,7 @@ import DropdownCursos from "../../Component/Drowdownlist/dropdownCursos";
 import { ICurso } from "@/types/apiResponseCurso";
 import ModalUpdateForm from "../../Component/Modals/ModalUpdateForm";
 import { Formulario } from "@/types/leads/paginas";
+import { ViewCursos } from "@/services/Cursos-Api/PushAPI";
 
 interface PropsFormCampaing {
   Content: ReactNode;
@@ -48,14 +49,15 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [isModalOpen, setIsModalOpen] = useState();
-  const [bots, setIsBots] = useState<IBot[]>([]);
-  const [curso, setIsCurso] = useState<ICurso[]>([]);
+  const [bots, setIsBots] = useState<IBot|null>(null);
+  const [curso, setIsCurso] = useState<ICurso|null>(null);
   const [updateFlag, setUpdateFlag] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Estado para el curso seleccionado para editar
   const [selectedCurso, setSelectedCurso] = useState<Formulario | null>(null);
   const [Formulario, setFormulario] = useState<Formulario[]>([]);
+  const [cursos, setCursos] = useState<ICurso[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Estado para el formulario
@@ -63,27 +65,103 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
     name: "",
     idform: "",
   });
+
+
   const fetchCursos = async (term = "") => {
     setLoading(true);
     setError(null);
     try {
+      // Obtiene los formularios según el término de búsqueda
       const data = await ViewCourse.View(term);
       setFormulario(data);
+      
+      // Extrae los IDs de cursos de los datos recibidos
+      const cursoIDs = data.map(item => item.cursoId);
+      
+      // Si hay IDs de cursos, obtiene sus detalles
+      if (cursoIDs.length > 0) {
+        fetchCursosInfo(cursoIDs);
+        
+      }
+      
+      console.log("Formularios cargados:", data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
-      console.error("Error al cargar cursos:", err);
+      console.error("Error al cargar formularios:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Efecto para cargar los datos cuando cambia el término de búsqueda
   useEffect(() => {
     const timer = setTimeout(() => {
+     
       fetchCursos(searchTerm);
     }, 300);
-    console.log("data", Formulario);
+    
+    console.log("Formularios actuales:", Formulario);
+    
     return () => clearTimeout(timer);
   }, [searchTerm, updateFlag]);
+
+  // Función para obtener información detallada de los cursos
+
+  const fetchCursosInfo = async (ids: number[]) => {
+    if (!ids.length) return;
+    
+    setLoading(true);
+    try {
+      // console.log("Obteniendo información para cursos con IDs:", ids);
+      
+      // Crear un array de promesas para obtener cada curso
+      const promesas = ids.map(id => ViewCursos.View(id));
+      
+      // Esperar a que todas las promesas se resuelvan
+      const resultados = await Promise.all(promesas);
+      
+      console.log("Resultados de consultas de cursos:", resultados);
+      
+      // Aplana los resultados si cada llamada devuelve un array
+      const cursosData = resultados.flat().filter(Boolean);
+      
+      console.log("Datos de cursos procesados:", cursosData);
+      
+      setCursos(cursosData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      console.error("Error al obtener información de cursos:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para obtener el nombre de un curso por su ID
+  const getNombreCurso = (cursoId: number) => {
+    // Si cursoId es inválido, retorna un mensaje apropiado
+    if (!cursoId) return "Sin curso asignado";
+    
+    console.log("Buscando curso con ID:", cursoId);
+    console.log("Cursos disponibles:", cursos);
+    
+    // Busca el curso por su ID
+    const curso = cursos.find(c => {
+      // Asegúrate de comparar el mismo tipo de dato
+      return c.id === cursoId || 
+             c.id === Number(cursoId) || 
+             (c.id && (c.id === cursoId || c.id === Number(cursoId)));
+    });
+    
+    if (curso) {
+      console.log("Curso encontrado:", curso);
+      // Retorna la nomenclatura o un valor de respaldo
+      return curso.nombre || curso.nombre || `Curso sin nombre (ID: ${cursoId})`;
+    } else {
+      // Si no se encuentra el curso, retorna un mensaje indicando el ID
+      return `Curso ID: ${cursoId} (no encontrado)`;
+    }
+  };
+
 
   const sendDatapage = async () => {
     try {
@@ -110,17 +188,15 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
         return;
       }
 
-      const botId = bots.length > 0 ? bots[0].id : null;
-
-      // Obtener el ID del curso seleccionado (asumiendo que tienes un estado para esto)
-      const cursoId = curso.length > 0 ? curso[0].id : null;
+     
       // 1. Actualizar el curso existente (no crear nuevo)
       const dataForm = {
         name: formData.name,
         RedFormularioId: formData.idform,
-        cursoId: cursoId,
+        cursoId: curso?.id,
         campanaId: Number(paginaId),
-        botId: botId,
+        botId: bots?.id,
+        botName: bots?.name
       };
 
       const cursoCreado = await FormCreate.create(dataForm);
@@ -210,78 +286,14 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
     }
   };
 
-  // Estado para la búsqueda
 
-  // Estado para el filtro de estado
 
-  // Estado para la ordenación
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Formulario | null;
     direction: "asc" | "desc";
   }>({ key: null, direction: "asc" });
 
-  // Estado para la paginación
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const itemsPerPage = 5;
 
-  // Manejar cambios en el formulario
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value } = e.target;
-  //   setFormData({
-  //     ...formData,
-  //     [name]: value,
-  //   });
-  // };
-
-  // Abrir modal para editar
-  // const handleEdit = (curso: Curso) => {
-  //   setSelectedCurso(curso);
-  //   setFormData({
-  //     nombreCampana: curso.nombreCampana,
-  //     idFormulario: curso.idFormulario,
-  //   });
-  //   setIsModalOpen(true);
-  // };
-
-  // Manejar envío del formulario
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   // Validar que los campos no estén vacíos
-  //   if (!formData.nombreCampana.trim() || !formData.idFormulario.trim()) {
-  //     alert("Por favor, complete todos los campos");
-  //     return;
-  //   }
-
-  //   if (selectedCurso) {
-  //     // Actualizar curso existente
-  //     const updatedCursos = cursos.map((curso) =>
-  //       curso.id === selectedCurso.id
-  //         ? {
-  //             ...curso,
-  //             nombreCampana: formData.nombreCampana,
-  //             idFormulario: formData.idFormulario,
-  //           }
-  //         : curso,
-  //     );
-  //     setCursos(updatedCursos);
-  //   }
-
-  //   // Cerrar modal y resetear formulario
-  //   setIsModalOpen(false);
-  //   setSelectedCurso(null);
-  //   setFormData({
-  //     nombreCampana: "",
-  //     idFormulario: "",
-  //   });
-  // };
-
-  // Función para eliminar un curso
-  // const handleDelete = (id: number) => {
-  //   if (confirm("¿Está seguro de que desea eliminar este curso?")) {
-  //     setCursos(cursos.filter((curso) => curso.id !== id));
-  //   }
-  // };
 
   // Función para ordenar
   const requestSort = (key: keyof Formulario) => {
@@ -293,50 +305,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
   };
 
   
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: name === "RedCampanaId" ? value.replace(/\D/g, "") : value, // Solo números en RedPaginaId
-      }));
-    };
-  // Filtrar y ordenar cursos
-  // const filteredAndSortedCursos = cursos
-  //   .filter((curso) => {
-  //     // Filtrar por término de búsqueda
-  //     const matchesSearch =
-  //       curso.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       curso.RedFormularioId.toLowerCase().includes(searchTerm.toLowerCase());
-
-  //     // Filtrar por estado
-  //     const matchesEstado =
-  //       estadoFilter === "todos" ||
-  //       String(curso.status).toLowerCase() === estadoFilter.toLowerCase();
-
-  //     return matchesSearch && matchesEstado;
-  //   })
-  //   .sort((a, b) => {
-  //     // Si no hay configuración de ordenación, no ordenar
-  //     if (!sortConfig.key) return 0;
-
-  //     // Ordenar según la configuración
-  //     if (a[sortConfig.key] < b[sortConfig.key]) {
-  //       return sortConfig.direction === "asc" ? -1 : 1;
-  //     }
-  //     if (a[sortConfig.key] > b[sortConfig.key]) {
-  //       return sortConfig.direction === "asc" ? 1 : -1;
-  //     }
-  //     return 0;
-  //   });
-
-  // Paginación
-  // const paginatedCursos = filteredAndSortedCursos.slice(
-  //   (currentPage - 1) * itemsPerPage,
-  //   currentPage * itemsPerPage,
-  // );
-
-  // Total de páginas
-  // const totalPages = Math.ceil(filteredAndSortedCursos.length / itemsPerPage);
+ 
 
   return (
     <>
@@ -475,6 +444,26 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
+                    onClick={() => requestSort("status")}
+                  >
+                    <div className="flex items-center">
+                      Cursos
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="cursor-pointer px-6 py-3"
+                    onClick={() => requestSort("status")}
+                  >
+                    <div className="flex items-center">
+                      Bot
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="cursor-pointer px-6 py-3"
                     onClick={() => requestSort("createdAt")}
                   >
                     <div className="flex items-center">
@@ -492,6 +481,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                       <ArrowUpDown className="ml-1 h-4 w-4" />
                     </div>
                   </th>
+                 
                   <th scope="col" className="px-6 py-3 text-right">
                     Acciones
                   </th>
@@ -502,16 +492,24 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   Formulario.map((form,index) => (
                     <tr
                     
-                    key={form.id }// 🔹 Clave única sin fallback inseguro
+                    key={form.campanaId }// 🔹 Clave única sin fallback inseguro
                       className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                        #{form.id}
+                        #{form.campanaId}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                         {form.name}
                       </td>
                       <td className="px-6 py-4">{form.RedFormularioId}</td>
+                      <td className="px-6 py-4">
+                        {getNombreCurso(form.cursoId)}
+                    
+                      </td>
+                      <td className="px-6 py-4">
+                        {form.botName}
+
+                      </td>
                       <td className="px-6 py-4">
                         {form.createdAt
                           ? new Date(form.createdAt).toLocaleDateString()
@@ -551,7 +549,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
 
                           <button
                             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                            onClick={() => deleteData(form.id)}
+                            onClick={() => deleteData(form.campanaId)}
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>

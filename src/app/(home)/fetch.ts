@@ -12,7 +12,7 @@ export async function getOverviewData() {
       growthRate: 4.35,
     },
     products: {
-      value: "Campañas",
+      value: "Paginas",
       growthRate: 2.59,
     },
     // users: {

@@ -6,7 +6,7 @@ import { ICurso } from "@/types/apiResponseCurso";
 
 interface DropDownCursosProps {
   idCursoInicial?: number | null; // Solo recibe el ID
-  onCursoSeleccionado: (curso: ICurso | null) => void; // Devuelve el objeto completo
+  onCursoSeleccionado:(curso: ICurso | null) => void; // Devuelve el objeto completo o null
   placeholder?: string;
 }
 
@@ -33,7 +33,7 @@ const DropdownCursos = ({
         const cursoPreseleccionado = resultados.find(c => c.id === idCursoInicial);
         if (cursoPreseleccionado) {
           setCursoActual(cursoPreseleccionado);
-          setBusqueda(cursoPreseleccionado.nombre || cursoPreseleccionado.Nomenclatura || "");
+          setBusqueda(cursoPreseleccionado.nombre || cursoPreseleccionado.nomenclatura || "");
         }
       }
     } catch (error) {
@@ -60,7 +60,7 @@ const DropdownCursos = ({
     const cursoExistente = opciones.find(c => c.id === idCursoInicial);
     if (cursoExistente) {
       setCursoActual(cursoExistente);
-      setBusqueda(cursoExistente.nombre || cursoExistente.Nomenclatura || "");
+      setBusqueda(cursoExistente.nombre || cursoExistente.nomenclatura || "");
     }
   }, [idCursoInicial, opciones]);
 
@@ -68,7 +68,7 @@ const DropdownCursos = ({
   const seleccionarCurso = (curso: ICurso) => {
     setCursoActual(curso);
     onCursoSeleccionado(curso); // Envía el objeto completo al padre
-    setBusqueda(curso.nombre || curso.Nomenclatura || "");
+    setBusqueda(curso.nombre || curso.nomenclatura || "");
     setAbierto(false);
   };
 
@@ -76,7 +76,7 @@ const DropdownCursos = ({
   const limpiarSeleccion = () => {
     setCursoActual(null);
     setBusqueda("");
-    onCursoSeleccionado(null); // Notifica al padre
+    onCursoSeleccionado(null); // Notifica al padre que no hay curso seleccionado
     setAbierto(false);
   };
 
@@ -133,7 +133,7 @@ const DropdownCursos = ({
                 }`}
                 onClick={() => seleccionarCurso(curso)}
               >
-                <span>{curso.nombre || curso.Nomenclatura}</span>
+                <span>{curso.nombre || curso.nomenclatura}</span>
                 {cursoActual?.id === curso.id && (
                   <span className="text-blue-600">✓</span>
                 )}

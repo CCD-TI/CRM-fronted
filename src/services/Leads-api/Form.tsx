@@ -55,7 +55,7 @@ export const ViewCourse = {
     async View(Params: string): Promise<Formulario[]> {
       try { 
         const encondeparam = encodeURIComponent(Params);
-        const response = await fetch(`${API_URL}/formulario/search?q=${Params}`, {
+        const response = await fetch(`${API_URL}/formulario/search?q=${encondeparam}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           // body: JSON.stringify({ search: searchTerm }),

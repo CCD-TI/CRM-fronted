@@ -25,6 +25,7 @@ export interface Formulario {
     id: number;
     campanaId:number;
     botId: number,
+    botName: string,
     createdAt: Date;
     updatedAt:Date
     

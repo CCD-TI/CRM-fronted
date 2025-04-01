@@ -34,7 +34,7 @@ export const CursoService = {
 export const CreateCurso ={
   async create(formData: any) {
     try {
-      const response = await fetch(`http://localhost:8004/curso`, {
+      const response = await fetch(`${API_URL}/api/storage/curso`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -118,11 +118,11 @@ export const SearchCurso = {
 
 
 
-export const ViewCurso = {
-    async View():Promise<ICurso[]>{
+export const ViewCursos = {
+    async View(id:number):Promise<ICurso[]>{
     try {
 
-            const response = await fetch(`${API_URL}/api/storage/curso`, {
+            const response = await fetch(`${API_URL}/api/storage/curso/${id}`, {
                 method: 'GET',
                 headers: {
                   'Accept': 'application/json'

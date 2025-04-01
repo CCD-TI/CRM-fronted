@@ -9,7 +9,7 @@ export async function OverviewCardsGroup() {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-      <Link href="/Cursos">
+      {/* <Link href="/Cursos">
       <OverviewCard
         label="Total Views"
         data={{
@@ -18,9 +18,9 @@ export async function OverviewCardsGroup() {
         }}
         Icon={icons.Views}
       />
-      </Link>
+      </Link> */}
 
-      <Link href="/paginas">
+      {/* <Link href="/paginas">
       <OverviewCard
         label="Total Profit"
         data={{
@@ -29,7 +29,7 @@ export async function OverviewCardsGroup() {
         }}
         Icon={icons.Profit}
       />
-    </Link>
+    </Link> */}
 
     <Link href="/pagesmeta">
     
