@@ -2,7 +2,7 @@
 export interface ICurso {
     id: number;
     nombre: string;
-    Nomenclatura: string;
+    nomenclatura: string;
     status: number;
     flowId: number;
     flowNombre: string;

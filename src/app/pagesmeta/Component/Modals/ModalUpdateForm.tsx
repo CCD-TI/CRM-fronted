@@ -1,4 +1,5 @@
 "use client";
+import { FormUpdate } from "@/services/Leads-api/Form";
 import { PaginasCreate, PaginasUpdate } from "@/services/Leads-api/Paginas";
 import { Formulario, paginas } from "@/types/leads/paginas";
 import {
@@ -11,8 +12,15 @@ import {
   useDisclosure,
   Switch,
 } from "@heroui/react";
+import { data } from "framer-motion/client";
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import DropdownCursos from "../Drowdownlist/dropdownCursos";
+import SelectBots from "@/app/curso/Components/DropdownList/SelectBots";
+import { ICurso } from "@/types/apiResponseCurso";
+import DropdowmListUpdate from "../Drowdownlist/DropdowmListUpdate";
+import Dropdowmbotupdate from "../Drowdownlist/Dropdowmbotupdate";
+import { IBot } from "@/types/flows";
 
 interface ModalFormProps {
   btnCreate: React.ReactNode;
@@ -20,22 +28,40 @@ interface ModalFormProps {
   onUpdate?: () => void;
 }
 
-export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormProps) {
+export default function ModalForm({
+  btnCreate,
+  datapage,
+  onUpdate,
+}: ModalFormProps) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [formData, setFormData] = useState({ 
-    name: "", 
-    RedPaginaId: "" 
+  const [cursos, setCursos] = useState<ICurso[] | undefined>(undefined);
+  const [bots, setBots] = useState<IBot[] | undefined>(undefined);
+  const [formData, setFormData] = useState({
+    id: 0, // Added id property
+    name: "",
+    RedFormularioId: "",
+    cursoId: 0,
+    campanaId: 0,
+    botId: 0,
   });
+
   const [automaticUpdates, setAutomaticUpdates] = useState(0);
-  
+
   // Utilizamos useEffect para actualizar el estado cuando cambian los props
   useEffect(() => {
     if (datapage && Object.keys(datapage).length > 0) {
       setFormData({
+        id: datapage.id,
         name: datapage.name || "",
-        RedPaginaId: datapage.RedFormularioId ? datapage.RedFormularioId.toString() : "",
+        RedFormularioId: datapage.RedFormularioId
+          ? datapage.RedFormularioId.toString()
+          : "",
+        botId: datapage.botId,
+        cursoId: datapage.cursoId,
+        campanaId: datapage.campanaId,
       });
       setAutomaticUpdates(datapage.status || 0);
+      console.log("hola", datapage);
     }
   }, [datapage]);
 
@@ -52,7 +78,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
         });
         return;
       }
-      if (!formData.RedPaginaId) {
+      if (!formData.RedFormularioId) {
         Swal.fire({
           icon: "warning",
           title: "Error",
@@ -63,16 +89,20 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
         });
         return;
       }
-      
+
       // Datos actualizados para enviar
       const datosActualizados = {
         name: formData.name,
-        RedPaginaId: Number(formData.RedPaginaId),
-        status: automaticUpdates
+        RedFormularioId: formData.RedFormularioId,
+        cursoId: formData.cursoId,
+        campana: formData.campanaId,
+        botId: formData.botId,
+        status: automaticUpdates,
+        id: formData.id,
       };
 
       // Usamos el ID de la página que estamos editando
-      const cursoCreado = await PaginasUpdate.Update(datosActualizados, datapage.id);
+      const FormularioUpdate = await FormUpdate.update(datosActualizados);
 
       Swal.fire({
         icon: "success",
@@ -83,8 +113,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
       });
 
       // Limpiar selecciones y cerrar modal
-      setFormData({ name: "", RedPaginaId: "" }); 
-      
+
       // Actualizar vista principal (si está en un contexto)
       if (onUpdate) onUpdate();
       onOpenChange(); // Cerrar el modal después de actualizar
@@ -100,14 +129,6 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "RedPaginaId" ? value.replace(/\D/g, "") : value, // Solo números en RedPaginaId
-    }));
-  };
-
   const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAutomaticUpdates(e.target.checked ? 1 : 0);
   };
@@ -119,10 +140,10 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex justify-between gap-1 m-3">
+              <ModalHeader className="m-3 flex justify-between gap-1">
                 <h1>Actualizar página</h1>
                 <Switch
-                color="primary"
+                  color="primary"
                   isSelected={automaticUpdates === 1}
                   onChange={handleSwitchChange}
                 >
@@ -131,26 +152,55 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
               </ModalHeader>
               <ModalBody>
                 <div className="flex flex-col gap-4">
+                  <label htmlFor="">Campaña:</label>
                   <input
                     type="text"
                     name="name"
+                    disabled
                     placeholder="Nombre de la publicidad"
                     className="w-full rounded border p-2"
                     value={formData.name}
-                    onChange={handleChange}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                   />
-                  
+                  <label htmlFor="curso">Curso:</label>
+                  <DropdowmListUpdate
+                    onCursoSeleccionado={(curso) => setCursos(curso ? [curso] : [])}
+                    idCursoInicial={formData.cursoId}
+                  />
+
+                  <label htmlFor="bot">Bot:</label>
+                  <Dropdowmbotupdate
+                   onBotSeleccionado={(bot) => setBots(bot ? [bot] : [])}
+                   botIdInicial={formData.botId}
+                  />
                   {/* {datapage && <p className="text-sm text-gray-500">ID actual: {datapage.id}</p>}
                    */}
+
+                  <label htmlFor="">ID Formulario:</label>
                   <input
-                    type="number"
+                    type="text"
                     name="RedPaginaId"
                     placeholder="ID de la Página"
                     className="w-full rounded border p-2"
-                    value={formData.RedPaginaId}
+                    value={formData.RedFormularioId}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        RedFormularioId: e.target.value,
+                      })
+                    }
+                  />
+                  {/* <input
+                    type="text"
+                    name="RedPaginaId"
+                    placeholder="ID de la Página"
+                    className="w-full rounded border p-2"
+                    value={formData.campanaId}
                     onChange={handleChange}
                   />
-                 
+                  */}
                   <Button color="primary" onClick={sendDatapage}>
                     Guardar
                   </Button>

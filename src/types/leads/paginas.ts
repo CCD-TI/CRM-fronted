@@ -18,12 +18,15 @@ export interface campanas {
 }
 
 export interface Formulario {
-    id: number;
     name: string;
     RedFormularioId: string;
     cursoId: number;
     status: number;
+    id: number;
+    campanaId:number;
+    botId: number,
     createdAt: Date;
-   
+    updatedAt:Date
+    
 }
 

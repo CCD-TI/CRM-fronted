@@ -31,6 +31,32 @@ export const CursoService = {
   }
 };
 
+export const CreateCurso ={
+  async create(formData: any) {
+    try {
+      const response = await fetch(`http://localhost:8004/curso`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      // Verificar si la respuesta fue exitosa (status 200-299)
+      if (!response.ok) {
+        // Intentar parsear el mensaje de error del backend
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error al crear curso:', error);
+      throw error;
+    }
+  }
+}
+
 export const BotService = {
   // Enviar datos del formulario al backend usando fetch
   async createCurso(formData: any) {

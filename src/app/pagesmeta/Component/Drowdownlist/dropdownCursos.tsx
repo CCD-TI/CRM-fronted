@@ -246,7 +246,7 @@ const DropdownBuscador = ({ onSeleccionBots, cursoSeleccionado = [] }: DropDownL
         <input
           type="text"
           className="w-full rounded-xl border p-2"
-          placeholder="Buscar Curso..."
+          placeholder="Buscar Bot..."
           value={busqueda}
           onChange={manejarCambioBusqueda}
           onClick={() => {

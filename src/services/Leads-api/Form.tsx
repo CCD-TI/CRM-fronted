@@ -1,4 +1,5 @@
 import { Bots } from "@/types/flows";
+import { Formulario } from "@/types/leads/paginas";
 
 
 const API_URL = "http://localhost:8003"; // Ajusta la URL base
@@ -30,7 +31,7 @@ export const FormUpdate = {
   async update(formData: any) {
     try {
       const response = await fetch(`${API_URL}/formulario`, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
@@ -51,12 +52,13 @@ export const FormUpdate = {
 };
 
 export const ViewCourse = {
-    async View(searchTerm: string = ''): Promise<Bots[]> {
+    async View(Params: string): Promise<Formulario[]> {
       try { 
-        const response = await fetch(`${API_URL}/storage/`, {
-          method: "POST",
+        const encondeparam = encodeURIComponent(Params);
+        const response = await fetch(`${API_URL}/formulario/search?q=${Params}`, {
+          method: "GET",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ search: searchTerm }),
+          // body: JSON.stringify({ search: searchTerm }),
         });
   
         // Verificar si la respuesta fue exitos a (status 200-299)
@@ -68,7 +70,7 @@ export const ViewCourse = {
   
         return await response.json();
       } catch (error) {
-        console.error("Error al crear campaing:", error);
+        console.error("Error al buscar campaña:", error);
         throw error;
       }
     },
@@ -78,7 +80,7 @@ export const DeleteCourse = {
     async delete(id: number ): Promise<Bots[]> {
       try { 
         const response = await fetch(`${API_URL}/formulario/${id}`, {
-          method: "POST",
+          method: "DELETE",
           headers: { "Content-Type": "application/json" },
          
         });

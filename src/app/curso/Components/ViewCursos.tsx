@@ -7,6 +7,7 @@ import {
 SearchCurso 
 
 } from "@/services/Cursos-Api/PushAPI";
+
 import {
   Search,
   Edit,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import Modalcont from "./Modals/Modalcont";
 import { FaChevronDown, FaChevronRight, FaPlusCircle } from "react-icons/fa";
+import Modalcreate from "@/app/curso/Components/Modals/ModalCreate"
 import ModalEdit from "./Modals/ModalEdit";
 import { ICurso } from "@/types/apiResponseCurso";
 
@@ -26,6 +28,7 @@ const AdminCursos = () => {
   const toggleCourseDetails = (courseId: any) => {
     setOpenCourseId(openCourseId === courseId ? null : courseId);
   };
+  const [cursos, setCurso] = useState<ICurso[]>([]);
 
   const [orderBy, setOrderBy] = useState("fechaCreacion");
   const [orderDirection, setOrderDirection] = useState("desc");
@@ -150,6 +153,16 @@ useEffect(() => {
                 onChange={handleSearchChange}
               />
             </div>
+            <Modalcreate 
+              btnTrigger={ <button className="bg-blue-600 text-white p-2 px-4 rounded-xl">
+                Crear curso
+              </button>}
+              // Objeto completo
+             
+              onUpdate={() => setUpdateFlag((prev) => !prev)}
+
+            />
+           
           </div>
         </div>
 
@@ -213,7 +226,7 @@ useEffect(() => {
                         </div>
                       </div>
                       <div className="col-start-3 text-sm text-gray-900">
-                        {curso.Nomenclatura}
+                        {curso.nomenclatura}
                       </div>
                       <div className="col-start-4 row-start-1">
                         {curso.status === 1 ? (
