@@ -1,6 +1,6 @@
 import { campanas } from "@/types/leads/paginas";
 
-const API_URL = "http://localhost:8003"; // Ajusta la URL base
+const API_URL = "http://localhost:8000"; // Ajusta la URL base
 
 
 
@@ -9,7 +9,7 @@ const API_URL = "http://localhost:8003"; // Ajusta la URL base
 export const CampaingCreate = {
   async create(formData: any) {
     try {
-      const response = await fetch(`${API_URL}/campana`, {
+      const response = await fetch(`${API_URL}/api/leads-service/campana/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -60,7 +60,7 @@ export const CampaingView = {
       const encondeparam = encodeURIComponent(Params);
       const idPagina = Number(id)
       const response = await fetch(
-        `${API_URL}/campana/${idPagina}/search?q=${encondeparam}`,
+        `${API_URL}/api/leads-service/campana/${idPagina}/search?q=${encondeparam}`,
         {
           method: "GET",
           headers: {

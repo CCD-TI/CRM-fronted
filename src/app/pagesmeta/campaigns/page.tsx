@@ -88,7 +88,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
       // 1. Actualizar el curso existente (no crear nuevo)
       const dataForm = {
         name: formData.name,
-        RedCampanaId: Number(formData.RedCampanaId),
+        RedCampanaId: formData.RedCampanaId,
         paginaId: Number(paginaId),
         status: 1,
       };
@@ -466,7 +466,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
           {loading && (
             <p className="text-center text-gray-500">Cargando cursos...</p>
           )}
-          {error && <p className="text-center text-red-500">Error: {error}</p>}
+          {/* {error && <p className="text-center text-red-500">Error: {error}</p>} */}
           {/* Tabla */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">

@@ -34,12 +34,11 @@ export const PaginasView = {
   },
 };
 
-
 export const PaginasCreate = {
 
     async createPaginas(formData: any) {
         try {
-            const response = await fetch(`${API_URL}/pagina`, {
+            const response = await fetch(`${API_URL}/api/leads-service/pagina`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json'
@@ -67,7 +66,7 @@ export const PaginasUpdate = {
 
     async Update(formData: any,id: number) {
         try {
-            const response = await fetch(`${API_URL}/pagina/${id}`, {
+            const response = await fetch(`${API_URL}/api/leads-service/pagina/${id}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json'
@@ -95,7 +94,7 @@ export const PaginasDelete = {
     async deletePaginas(id: number) {
 
         try {
-            const response = await fetch(`${API_URL}/pagina/${id}`, {
+            const response = await fetch(`${API_URL}/api/leads-service/pagina/${id}`, {
                 method: 'DELETE',
                 headers: { 
                     'Content-Type': 'application/json'
