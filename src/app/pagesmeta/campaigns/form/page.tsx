@@ -10,7 +10,7 @@ import {
   Button,
   useDisclosure,
 } from "@heroui/react";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import {
   Edit,
   Trash2,
@@ -45,7 +45,7 @@ interface PropsFormCampaing {
 export default function Form({ Content, Campaing }: PropsFormCampaing) {
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
-  const paginaId = Number(searchParams.get("paginaId"));
+  const campangId = Number(searchParams.get("campingId"));
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [isModalOpen, setIsModalOpen] = useState();
@@ -55,7 +55,6 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Estado para el curso seleccionado para editar
-  const [selectedCurso, setSelectedCurso] = useState<Formulario | null>(null);
   const [Formulario, setFormulario] = useState<Formulario[]>([]);
   const [cursos, setCursos] = useState<ICurso[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,47 +64,6 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
     name: "",
     idform: "",
   });
-
-
-  const fetchCursos = async (term = "") => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Obtiene los formularios según el término de búsqueda
-      const data = await ViewCourse.View(term);
-      setFormulario(data);
-      
-      // Extrae los IDs de cursos de los datos recibidos
-      const cursoIDs = data.map(item => item.cursoId);
-      
-      // Si hay IDs de cursos, obtiene sus detalles
-      if (cursoIDs.length > 0) {
-        fetchCursosInfo(cursoIDs);
-        
-      }
-      
-      console.log("Formularios cargados:", data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-      console.error("Error al cargar formularios:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Efecto para cargar los datos cuando cambia el término de búsqueda
-  useEffect(() => {
-    const timer = setTimeout(() => {
-     
-      fetchCursos(searchTerm);
-    }, 300);
-    
-    console.log("Formularios actuales:", Formulario);
-    
-    return () => clearTimeout(timer);
-  }, [searchTerm, updateFlag]);
-
-  // Función para obtener información detallada de los cursos
 
   const fetchCursosInfo = async (ids: number[]) => {
     if (!ids.length) return;
@@ -135,6 +93,41 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
       setLoading(false);
     }
   };
+  const fetchCursos = useCallback(async (term = "") => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ViewCourse.View(term, campangId);
+      setFormulario(data);
+      console.log("dataform", data);
+      const cursoIDs = data.map(item => item.cursoId);
+      if (cursoIDs.length > 0) {
+        fetchCursosInfo(cursoIDs);
+      }
+      console.log("Formularios cargados:", data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      console.error("Error al cargar formularios:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [campangId]);
+
+  // Efecto para cargar los datos cuando cambia el término de búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+     
+      fetchCursos(searchTerm);
+    }, 300);
+    
+    // console.log("Formularios actuales:", Formulario);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm, updateFlag,fetchCursos]);
+
+  // Función para obtener información detallada de los cursos
+
+
 
   // Función para obtener el nombre de un curso por su ID
   const getNombreCurso = (cursoId: number) => {
@@ -162,9 +155,37 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
     }
   };
 
+ 
 
+  
   const sendDatapage = async () => {
+
+    const dataIdFormAsStrings = Formulario.map(
+      ({ RedFormularioId }) => RedFormularioId?.toString()
+    );
     try {
+      if (!curso?.id) {
+        Swal.fire({
+          icon: "warning",
+          title: "Error",
+          text: "Por favor escoja un curso",
+          timer: 2000, // El mensaje desaparecerá después de 3 segundos
+          timerProgressBar: true, // Muestra una barra de progreso del timer
+          showConfirmButton: false, // Oculta el botón de confirmación
+        });
+        return;
+      }
+      if (!bots?.id) {
+        Swal.fire({
+          icon: "warning",
+          title: "Error",
+          text: "Por favor seleccione un bot",
+          timer: 2000, // El mensaje desaparecerá después de 3 segundos
+          timerProgressBar: true, // Muestra una barra de progreso del timer
+          showConfirmButton: false, // Oculta el botón de confirmación
+        });
+        return;
+      }
       if (!formData.name) {
         Swal.fire({
           icon: "warning",
@@ -176,14 +197,14 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
         });
         return;
       }
-      if (!formData.idform) {
+      if (dataIdFormAsStrings.includes(formData.idform?.toString())) {
         Swal.fire({
-          icon: "warning",
+          icon: "error",
           title: "Error",
-          text: "Por favor digite el ID de la Campaña",
-          timer: 2000, // El mensaje desaparecerá después de 3 segundos
-          timerProgressBar: true, // Muestra una barra de progreso del timer
-          showConfirmButton: false, // Oculta el botón de confirmación
+          text: "El ID del formulario ingresado  ya existe oh el campo esta vacio",
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
         });
         return;
       }
@@ -194,7 +215,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
         name: formData.name,
         RedFormularioId: formData.idform,
         cursoId: curso?.id,
-        campanaId: Number(paginaId),
+        campanaId: Number(campangId),
         botId: bots?.id,
         botName: bots?.name
       };
@@ -220,8 +241,8 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo completar",
-        footer: error instanceof Error ? error.message : "",
+        text: "Error en Nombre Del Formulario",
+        footer:"tener en cuenta que no puede aver formularios con el nombre igual",
       });
 
       // Rollback visual (opcional)
@@ -492,11 +513,11 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                   Formulario.map((form,index) => (
                     <tr
                     
-                    key={form.campanaId }// 🔹 Clave única sin fallback inseguro
+                    key={form.id }// 🔹 Clave única sin fallback inseguro
                       className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                        #{form.campanaId}
+                        #{form.id}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                         {form.name}
@@ -537,7 +558,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
                         <div className="flex justify-end space-x-2">
                           <ModalUpdateForm
                             btnCreate={
-                              <button className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              <button className="text-blue-600 mt-[7px] hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                                 <Edit className="h-5 w-5" />
                               </button>
                             }
@@ -549,7 +570,7 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
 
                           <button
                             className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                            onClick={() => deleteData(form.campanaId)}
+                            onClick={() => deleteData(form.id)}
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>

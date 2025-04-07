@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
   ChevronDown,
@@ -22,117 +22,15 @@ import { paginas } from "@/types/leads/paginas";
 import Swal from "sweetalert2";
 import ModalFormPagemeta from "./Component/Modals/ModalFormPagemeta";
 import ModalFormPagemetaUpdate from "./Component/Modals/ModalFormPagemetaUpdate";
+import Migasdepan from "../curso/Components/Migasdepan";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/react";
 
-const USERS = [
-  {
-    id: 1,
-    pagina: "Cursos de Programación Avanzada",
-    email: "alex.johnson@example.com",
-    status: "Activo",
-    lastActive: "2023-03-22T10:30:00",
-    transactions: 245,
-    amount: 12580.5,
-  },
-  {
-    id: 2,
-    pagina: "Marketing Digital para Emprendedores",
-    email: "sarah.w@example.com",
-    status: "Activo",
-    lastActive: "2023-03-21T14:20:00",
-    transactions: 112,
-    amount: 5240.75,
-  },
-  {
-    id: 3,
-    pagina: "Diseño Gráfico desde Cero",
-    email: "michael.b@example.com",
-    status: "Inactivo",
-    lastActive: "2023-03-15T09:45:00",
-    transactions: 65,
-    amount: 3420.25,
-  },
-  {
-    id: 4,
-    pagina: "Negocios y Finanzas Personales",
-    email: "emily.davis@example.com",
-    status: "Pendiente",
-    lastActive: "2023-03-20T16:15:00",
-    transactions: 198,
-    amount: 9870.0,
-  },
-  {
-    id: 5,
-    pagina: "Inglés para Profesionales",
-    email: "david.w@example.com",
-    status: "Activo",
-    lastActive: "2023-03-22T08:10:00",
-    transactions: 87,
-    amount: 4320.5,
-  },
-  {
-    id: 6,
-    pagina: "Fotografía y Edición Profesional",
-    email: "jessica.m@example.com",
-    status: "Activo",
-    lastActive: "2023-03-21T11:30:00",
-    transactions: 156,
-    amount: 7650.25,
-  },
-  {
-    id: 7,
-    pagina: "Desarrollo de Aplicaciones Móviles",
-    email: "robert.t@example.com",
-    status: "Inactivo",
-    lastActive: "2023-03-10T13:45:00",
-    transactions: 42,
-    amount: 2180.75,
-  },
-  {
-    id: 8,
-    pagina: "Excel y Herramientas de Oficina",
-    email: "jennifer.a@example.com",
-    status: "Activo",
-    lastActive: "2023-03-19T15:20:00",
-    transactions: 215,
-    amount: 10540.0,
-  },
-  {
-    id: 9,
-    pagina: "Redes Sociales y Community Manager",
-    email: "chris.t@example.com",
-    status: "Pendiente",
-    lastActive: "2023-03-18T09:30:00",
-    transactions: 76,
-    amount: 3890.5,
-  },
-  {
-    id: 10,
-    pagina: "Cursos de Gestión de Proyectos",
-    email: "lisa.r@example.com",
-    status: "Activo",
-    lastActive: "2023-03-22T10:15:00",
-    transactions: 132,
-    amount: 6540.25,
-  },
-  {
-    id: 11,
-    pagina: "Contabilidad y Finanzas Empresariales",
-    email: "daniel.l@example.com",
-    status: "Activo",
-    lastActive: "2023-03-21T14:45:00",
-    transactions: 95,
-    amount: 4780.0,
-  },
-  {
-    id: 12,
-    pagina: "Educación y Docencia Online",
-    email: "michelle.c@example.com",
-    status: "Inactivo",
-    lastActive: "2023-03-12T11:20:00",
-    transactions: 178,
-    amount: 8920.75,
-  },
-];
+
 
 export default function Campañas() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -149,7 +47,7 @@ export default function Campañas() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCursos = async (term = "") => {
+  const fetchCursos = useCallback(  async (term = "") => {
     setLoading(true);
     setError(null);
     try {
@@ -161,16 +59,36 @@ export default function Campañas() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const stats = useMemo(() => {
+    const totalUsers = paginas.length;
+    const activeUsers = paginas.filter((user) => user.status === 1).length;
+    // const totalTransactions = USERS.reduce(
+    //   (sum, user) => sum + user.transactions,
+    //   0,
+    // );
+    // const totalAmount = USERS.reduce((sum, user) => sum + user.amount, 0);
+
+    return {
+      totalUsers,
+      activeUsers,
+      // totalTransactions,
+      // totalAmount: totalAmount.toLocaleString("en-US", {
+      //   style: "currency",
+      //   currency: "USD",
+      // }),
+      activePercentage: Math.round((activeUsers / totalUsers) * 100),
+    };
+  }, [paginas]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log("Datos recibidos del backend:", paginas);
       fetchCursos(searchTerm);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, updateFlag]);
+  }, [searchTerm, updateFlag ,fetchCursos]);
 
   const handleSearchChange = (e: { target: { value: any } }) => {
     setSearchTerm(e.target.value);
@@ -296,26 +214,6 @@ export default function Campañas() {
   // }, [paginatedData, selectedRows]);
 
   // Calcular estadísticas
-  const stats = useMemo(() => {
-    const totalUsers = paginas.length;
-    const activeUsers = paginas.filter((user) => user.status === 1).length;
-    const totalTransactions = USERS.reduce(
-      (sum, user) => sum + user.transactions,
-      0,
-    );
-    const totalAmount = USERS.reduce((sum, user) => sum + user.amount, 0);
-
-    return {
-      totalUsers,
-      activeUsers,
-      totalTransactions,
-      totalAmount: totalAmount.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-      }),
-      activePercentage: Math.round((activeUsers / totalUsers) * 100),
-    };
-  }, []);
 
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">
@@ -406,7 +304,7 @@ export default function Campañas() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        {/* <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -509,11 +407,12 @@ export default function Campañas() {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         {/* Cabecera de la tabla */}
+
         <div className="border-b border-gray-200 p-4 dark:border-gray-700 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -564,7 +463,7 @@ export default function Campañas() {
         {loading && (
           <p className="text-center text-gray-500">Cargando cursos...</p>
         )}
-        {error && <p className="text-center text-red-500">Error: {error}</p>}
+        {/* {error && <p className="text-center text-red-500">Error: {error}</p>} */}
         {/* Tabla */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
@@ -591,11 +490,13 @@ export default function Campañas() {
                   </div>
                 </th>
 
-                <th
-                  scope="col"
-                  className="cursor-pointer px-6 py-3"
-                  onClick={() => requestSort("status")}
-                >
+                <th scope="col" className="cursor-pointer px-6 py-3">
+                  <div className="flex items-center">
+                    Id pagina:
+                    <ArrowUpDown className="ml-1 h-4 w-4" />
+                  </div>
+                </th>
+                <th scope="col" className="cursor-pointer px-6 py-3">
                   <div className="flex items-center">
                     Fecha de creacion:
                     <ArrowUpDown className="ml-1 h-4 w-4" />
@@ -640,6 +541,9 @@ export default function Campañas() {
                       {user.name}
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {user.RedPaginaId}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
 
@@ -667,7 +571,30 @@ export default function Campañas() {
 
                     <td className="z-50 px-6 py-4 text-right">
                       <div className="relative inline-block text-left">
-                        <div className="group">
+                      <ModalFormPagemetaUpdate 
+                                btnCreate={
+                                  <>
+                                  <div
+                                className={
+                                  user.status === 1
+                                    ? ""
+                                    : "pointer-events-none opacity-50"
+                                }
+                              >
+                                <Link
+                                  href={`/pagesmeta/campaigns?name=${user.name}&paginaId=${user.id}`}
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 rounded-lg"
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Crear Campaña
+                                </Link>
+                              </div>
+                                  </>
+                                }
+                                datapage={user}
+                                onUpdate={() => setUpdateFlag((prev) => !prev)}
+                              />
+                        {/* <div className="group">
                           <button className="inline-flex items-center rounded-lg bg-transparent p-1 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
                             <MoreHorizontal className="h-5 w-5" />
                           </button>
@@ -682,10 +609,10 @@ export default function Campañas() {
                               >
                                 <Link
                                   href={`/pagesmeta/campaigns?name=${user.name}&paginaId=${user.id}`}
-                                  className="flex gap-2 items-center w-full  px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Crear Campaña
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Crear Campañaxxx
                                 </Link>
                               </div>
 
@@ -708,7 +635,7 @@ export default function Campañas() {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </td>
                   </tr>
@@ -809,6 +736,9 @@ export default function Campañas() {
           </div>
         </div> */}
       </div>
+      
     </div>
+
+    
   );
 }

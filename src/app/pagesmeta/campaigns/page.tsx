@@ -10,7 +10,7 @@ import {
   Button,
   useDisclosure,
 } from "@heroui/react";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import {
   Edit,
   Trash2,
@@ -30,23 +30,17 @@ import {
   CampaingDelete,
   CampaingView,
 } from "@/services/Leads-api/Campaing";
-import { campanas } from "@/types/leads/paginas";
+import { campanas,Curso } from "@/types/leads/paginas";
 import ModalFormcampaingUpdate from "../Component/Modals/ModalFormcampaingUpdate";
 
-interface Curso {
-  id: number;
-  nombreCampana: string;
-  idFormulario: string;
-  fechaCreacion: string;
-  estado: "Activo" | "Inactivo" | "Pendiente";
-}
 
-interface PropsFormCampaing {
-  Content: ReactNode;
-  Campaing?: string;
-}
 
-export default function App({ Content, Campaing }: PropsFormCampaing) {
+// interface PropsFormCampaing {
+//   Content: ReactNode;
+//   Campaing?: string;
+// }
+
+export default function App() {
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
   const paginaId = Number(searchParams.get("paginaId"));
@@ -125,15 +119,8 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "RedPaginaId" ? value.replace(/\D/g, "") : value, // Solo números en RedPaginaId
-    }));
-  };
 
-  const fetchCursos = async (term = "") => {
+  const fetchCursos = useCallback( async (term = "") => {
     setLoading(true);
     setError(null);
     try {
@@ -145,16 +132,16 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [paginaId]); // incluye dependencias necesarias
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log("Datos recibidos del backend:", campaing);
+      // console.log("Datos recibidos del backend:", campaing);
       fetchCursos(searchTerm);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, updateFlag]);
+  }, [searchTerm, updateFlag ,fetchCursos]);
 
   const deleteData = async (Idpagina: number) => {
     // Eliminé el parámetro 'e' ya que no es necesario
@@ -211,164 +198,13 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
     }
   };
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  
 
-  const [cursos, setCursos] = useState<Curso[]>([
-    {
-      id: 1,
-      nombreCampana: "Desarrollo Web Full Stack",
-      idFormulario: "FORM-WEB-001",
-      fechaCreacion: "2023-05-15",
-      estado: "Activo",
-    },
-    {
-      id: 2,
-      nombreCampana: "Python para Ciencia de Datos",
-      idFormulario: "FORM-PY-002",
-      fechaCreacion: "2023-06-20",
-      estado: "Activo",
-    },
-    {
-      id: 3,
-      nombreCampana: "JavaScript Avanzado",
-      idFormulario: "FORM-JS-003",
-      fechaCreacion: "2023-07-10",
-      estado: "Pendiente",
-    },
-    {
-      id: 4,
-      nombreCampana: "React Native para Móviles",
-      idFormulario: "FORM-RN-004",
-      fechaCreacion: "2023-08-05",
-      estado: "Inactivo",
-    },
-  ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
 
-  // Estado para el curso seleccionado para editar
-  const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null);
+  
 
-  // Estado para el formulario
 
-  // Estado para la búsqueda
-  // Estado para el filtro de estado
-  const [estadoFilter, setEstadoFilter] = useState("todos");
-
-  // Estado para la ordenación
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof Curso | null;
-    direction: "asc" | "desc";
-  }>({ key: null, direction: "asc" });
-
-  // Estado para la paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  //
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  // Abrir modal para editar
-  // const handleEdit = (curso: Curso) => {
-  //   setSelectedCurso(curso);
-  //   setFormData({
-  //     nombreCampana: curso.nombreCampana,
-  //     idFormulario: curso.idFormulario,
-  //   });
-  //   setIsModalOpen(true);
-  // };
-
-  // Manejar envío del formulario
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   // Validar que los campos no estén vacíos
-  //   if (!formData.nombreCampana.trim() || !formData.idFormulario.trim()) {
-  //     alert("Por favor, complete todos los campos");
-  //     return;
-  //   }
-
-  //   if (selectedCurso) {
-  //     // Actualizar curso existente
-  //     const updatedCursos = cursos.map((curso) =>
-  //       curso.id === selectedCurso.id
-  //         ? {
-  //             ...curso,
-  //             nombreCampana: formData.nombreCampana,
-  //             idFormulario: formData.idFormulario,
-  //           }
-  //         : curso,
-  //     );
-  //     setCursos(updatedCursos);
-  //   }
-
-  //   // Cerrar modal y resetear formulario
-  //   setIsModalOpen(false);
-  //   setSelectedCurso(null);
-  //   setFormData({
-  //     nombreCampana: "",
-  //     idFormulario: "",
-  //   });
-  // };
-
-  // Función para eliminar un curso
-  const handleDelete = (id: number) => {
-    if (confirm("¿Está seguro de que desea eliminar este curso?")) {
-      setCursos(cursos.filter((curso) => curso.id !== id));
-    }
-  };
-
-  // Función para ordenar
-  const requestSort = (key: keyof Curso) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Filtrar y ordenar cursos
-  const filteredAndSortedCursos = cursos
-    .filter((curso) => {
-      // Filtrar por término de búsqueda
-      const matchesSearch =
-        curso.nombreCampana.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        curso.idFormulario.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Filtrar por estado
-      const matchesEstado =
-        estadoFilter === "todos" ||
-        curso.estado.toLowerCase() === estadoFilter.toLowerCase();
-
-      return matchesSearch && matchesEstado;
-    })
-    .sort((a, b) => {
-      // Si no hay configuración de ordenación, no ordenar
-      if (!sortConfig.key) return 0;
-
-      // Ordenar según la configuración
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-
-  // Paginación
-  const paginatedCursos = filteredAndSortedCursos.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
-
-  // Total de páginas
-  const totalPages = Math.ceil(filteredAndSortedCursos.length / itemsPerPage);
 
   return (
     <>
@@ -475,7 +311,6 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("id")}
                   >
                     <div className="flex items-center">
                       ID
@@ -485,7 +320,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("nombreCampana")}
+                    
                   >
                     <div className="flex items-center">
                       Nombre de Campaña
@@ -495,7 +330,6 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("idFormulario")}
                   >
                     <div className="flex items-center">
                       Id de la campaña
@@ -505,7 +339,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("fechaCreacion")}
+                    
                   >
                     <div className="flex items-center">
                       Fecha de Creación
@@ -515,8 +349,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                   <th
                     scope="col"
                     className="cursor-pointer px-6 py-3"
-                    onClick={() => requestSort("estado")}
-                  >
+                          >
                     <div className="flex items-center">
                       Estado
                       <ArrowUpDown className="ml-1 h-4 w-4" />
@@ -562,12 +395,12 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div  className={`flex justify-end ${
+                        <div  className={`flex items-center justify-end gap-2 ${
                                   campana.status === 1
                                     ? ""
                                     : "pointer-events-none opacity-50"
                                 } `} >
-                          <Link href={`/pagesmeta/campaigns/form?name=${campana.name}&paginaId=${campana.id}`}  className={
+                          <Link href={`/pagesmeta/campaigns/form?name=${campana.name}&campingId=${campana.id}`}  className={
                                   campana.status === 1
                                     ? ""
                                     : "pointer-events-none opacity-50"
@@ -584,7 +417,7 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                           <ModalFormcampaingUpdate
                             btnCreate={
                               <button
-                                className="flex  mt-2 items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                                 // onClick={() => handleEdit(curso)}
                               >
                                 <Edit className="h-5 w-5" />
@@ -594,12 +427,12 @@ export default function App({ Content, Campaing }: PropsFormCampaing) {
                             onUpdate={() => setUpdateFlag((prev) => !prev)}
                           />
 
-                          <button
+                          {/* <button
                             onClick={() => deleteData(campana.id)}
-                            className="flex items-center px-4 py-2 text-sm text-red-600 hover:text-gray-700 dark:text-red-400 dark:hover:text-gray-700"
+                            className="flex items-center text-sm text-red-600 hover:text-red-200 dark:text-red-400 dark:hover:text-gray-400"
                           >
                             <Trash2 className="mr-2 h-5 w-5" />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>

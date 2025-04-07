@@ -31,3 +31,11 @@ export interface Formulario {
     
 }
 
+export interface Curso {
+    id: number;
+    nombreCampana: string;
+    idFormulario: string;
+    fechaCreacion: string;
+    estado: "Activo" | "Inactivo" | "Pendiente";
+  }
+

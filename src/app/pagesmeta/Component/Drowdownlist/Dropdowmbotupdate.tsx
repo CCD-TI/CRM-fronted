@@ -47,7 +47,7 @@ const DropdownBot = ({
   // Carga inicial
   useEffect(() => {
     buscarBots();
-  }, []);
+  }, );
 
   // Sincronizar cuando cambia el ID inicial
   useEffect(() => {

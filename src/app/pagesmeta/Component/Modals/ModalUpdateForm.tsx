@@ -99,7 +99,7 @@ export default function ModalForm({
         campana: formData.campanaId,
         botId: bots?.id?? formData.botId,
         status: automaticUpdates,
-        id: formData.campanaId
+        id: formData.id
       };
 
       // Usamos el ID de la página que estamos editando

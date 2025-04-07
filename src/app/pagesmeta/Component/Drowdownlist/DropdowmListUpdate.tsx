@@ -47,7 +47,7 @@ const DropdownCursos = ({
   // Carga inicial
   useEffect(() => {
     buscarCursos();
-  }, []);
+  }, );
 
   // Sincronizar cuando cambia el ID inicial
   useEffect(() => {

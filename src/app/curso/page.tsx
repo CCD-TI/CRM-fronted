@@ -9,7 +9,7 @@ import ViewCursos from "./Components/ViewCursos";
 const CalendarPage = () => {
   return (
     <>
-      <Breadcrumb pageName="Calendar" />
+      {/* <Breadcrumb pageName="Calendar" /> */}
       <div>
         <ViewCursos/>
       </div>

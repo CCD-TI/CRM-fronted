@@ -12,6 +12,7 @@ import { FaChevronDown, FaChevronRight, FaPlusCircle } from "react-icons/fa";
 import Modalcreate from "@/app/curso/Components/Modals/ModalCreate";
 import ModalEdit from "./Modals/ModalEdit";
 import { ICurso } from "@/types/apiResponseCurso";
+import Image from "next/image";
 
 const AdminCursos = () => {
   const [openCourseId, setOpenCourseId] = useState(null);
@@ -115,7 +116,7 @@ const AdminCursos = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 rounded-xl">
       {/* Main content */}
       <div className="p-6">
         <div className="mb-6 flex items-center justify-between">
@@ -157,7 +158,7 @@ const AdminCursos = () => {
         {error && <p className="text-center text-red-500">Error: {error}</p>}
 
         {/* Table */}
-        <div className="overflow-hidden rounded-3xl bg-white shadow-lg">
+        <div className="overflow-hidden rounded-3xl  shadow-lg">
           <div className="overflow-x-auto">
             {/* Table Header */}
             <div className="min-w-full divide-y divide-gray-200">
@@ -199,7 +200,9 @@ const AdminCursos = () => {
                           )}
                         </button>
                         <div className="mr-4 h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-200">
-                          <img
+                          <Image
+                          width={600}
+                          height={600}
                             src="https://pub-9d2abfa175714e64aed33b90722a9fd5.r2.dev/Multimedia/Imagen/Cursos/PortadaFinal/111_DOPPC.jpg"
                             alt="hola"
                             className="h-10 w-10 object-cover"

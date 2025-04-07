@@ -1,13 +1,4 @@
-// src/types/flows.ts
-export interface Mensaje {
-    id: string;
-    tipo: string;
-    content: {
-      body: string;
-      footer: string;
-    };
-  }
-  
+
   export interface Bots {
     id: number;
     name: string;
@@ -30,7 +21,6 @@ export interface Mensaje {
   export interface Flow {
     id: number;
     name: string;
-    mensajes: Mensaje[];
   }
  
   

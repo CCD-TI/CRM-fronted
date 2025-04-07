@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
 import { Providers } from "./providers";
+import Migasdepan from "./curso/Components/Migasdepan";
 
 export const metadata: Metadata = {
   title: {
@@ -26,9 +27,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script src="https://code.highcharts.com/maps/highmaps.js"></script>
+        {/* <script src="https://code.highcharts.com/maps/highmaps.js"></script>
         <script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
-        <script src="https://code.highcharts.com/mapdata/countries/co/co-all.js"></script>
+        <script src="https://code.highcharts.com/mapdata/countries/co/co-all.js"></script> */}
       </head>
       <body>
         <Providers>
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
               <Header />
 
               <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
+              <Migasdepan/>
                 <HeroProvider>{children}</HeroProvider>
               </main>
             </div>

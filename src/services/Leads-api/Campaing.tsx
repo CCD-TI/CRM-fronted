@@ -54,11 +54,10 @@ export const CampaingUpdate = {
 };
 
 export const CampaingView = {
-  // Enviar datos del formulario al backend usando fetch
-  async ViewData(Params: string , id: number):Promise<campanas[]> {
+  async ViewData(Params: string, id: number): Promise<campanas[]> {
     try {
       const encondeparam = encodeURIComponent(Params);
-      const idPagina = Number(id)
+      const idPagina = Number(id);
       const response = await fetch(
         `${API_URL}/api/leads-service/campana/${idPagina}/search?q=${encondeparam}`,
         {
@@ -68,22 +67,39 @@ export const CampaingView = {
           },
         },
       );
-
-      // Verificar si la respuesta fue exitosa (status 200-299)
+      
+      // Si la respuesta es 404 (no encontrado) o similar, simplemente devolver un array vacío
+      if (response.status === 404) {
+        return [];
+      }
+      
+      // Verificar otros códigos de error
       if (!response.ok) {
-        // Intentar parsear el mensaje de error del backend
         const errorData = await response.json().catch(() => ({}));
+        
+        // Si el mensaje de error indica búsqueda sin resultados, devolver array vacío
+        if (errorData.message && errorData.message.includes("búsqueda")) {
+          return [];
+        }
+        
         throw new Error(errorData.message || `Error HTTP: ${response.status}`);
       }
-
+      
       return await response.json();
     } catch (error) {
       console.error("Error al Traer la data", error);
+      
+      // Si el error específico es "Error al realizar la búsqueda", devolver array vacío
+      if (error instanceof Error && 
+          (error.message.includes("búsqueda") || 
+           error.message.includes("Error al realizar"))) {
+        return [];
+      }
+      
       throw error;
     }
   },
 };
-
 export const CampaingDelete = {
     async delete(id: number) {
 

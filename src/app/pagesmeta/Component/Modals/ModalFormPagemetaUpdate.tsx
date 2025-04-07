@@ -10,7 +10,13 @@ import {
   Button,
   useDisclosure,
   Switch,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Dropdown,
 } from "@heroui/react";
+import { Edit, MoreHorizontal } from "lucide-react";
+import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
@@ -20,20 +26,27 @@ interface ModalFormProps {
   onUpdate?: () => void;
 }
 
-export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormProps) {
+export default function ModalForm({
+  btnCreate,
+  datapage,
+  onUpdate,
+}: ModalFormProps) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [formData, setFormData] = useState({ 
-    name: "", 
-    RedPaginaId: "" 
+  const [formData, setFormData] = useState({
+    name: "",
+    RedPaginaId: "",
+    status: 0
   });
   const [automaticUpdates, setAutomaticUpdates] = useState(0);
-  
+
   // Utilizamos useEffect para actualizar el estado cuando cambian los props
   useEffect(() => {
     if (datapage && Object.keys(datapage).length > 0) {
       setFormData({
         name: datapage.name || "",
-        RedPaginaId: datapage.RedPaginaId ? datapage.RedPaginaId.toString() : "",
+        RedPaginaId: datapage.RedPaginaId
+          ? datapage.RedPaginaId.toString(): "",
+      status: datapage.status|| 0,
       });
       setAutomaticUpdates(datapage.status || 0);
     }
@@ -63,16 +76,19 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
         });
         return;
       }
-      
+
       // Datos actualizados para enviar
       const datosActualizados = {
         name: formData.name,
         RedPaginaId: Number(formData.RedPaginaId),
-        status: automaticUpdates
+        status: automaticUpdates,
       };
 
       // Usamos el ID de la página que estamos editando
-      const cursoCreado = await PaginasUpdate.Update(datosActualizados, datapage.id);
+      const cursoCreado = await PaginasUpdate.Update(
+        datosActualizados,
+        datapage.id,
+      );
 
       Swal.fire({
         icon: "success",
@@ -83,8 +99,8 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
       });
 
       // Limpiar selecciones y cerrar modal
-      setFormData({ name: "", RedPaginaId: "" }); 
-      
+      setFormData({ name: "", RedPaginaId: "" ,status: 0 });
+
       // Actualizar vista principal (si está en un contexto)
       if (onUpdate) onUpdate();
       onOpenChange(); // Cerrar el modal después de actualizar
@@ -112,17 +128,52 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
     setAutomaticUpdates(e.target.checked ? 1 : 0);
   };
 
+  const handleOpenModal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onOpen();
+  };
+
   return (
     <>
-      <div onClick={onOpen}>{btnCreate}</div>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Dropdown backdrop="blur">
+        <DropdownTrigger>
+          <button className="inline-flex items-center rounded-lg bg-transparent p-1 text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        </DropdownTrigger>
+        <DropdownMenu aria-label="Static Actions" variant="faded">
+          <DropdownItem key="new" isDisabled={datapage.status === 0 ? true : false}>{btnCreate}</DropdownItem>
+          <DropdownItem key="copy">
+            <div
+              onClick={onOpen}
+              className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </div>  
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        isKeyboardDismissDisabled
+        backdrop="blur"
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex justify-between gap-1 m-3">
+              <ModalHeader className="m-3 flex justify-between gap-1">
                 <h1>Actualizar página</h1>
                 <Switch
-                color="primary"
+                  classNames={{
+                   
+                    wrapper: "!bg-blue-600",
+                   
+                  }}
+                 
                   isSelected={automaticUpdates === 1}
                   onChange={handleSwitchChange}
                 >
@@ -139,7 +190,7 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
                     value={formData.name}
                     onChange={handleChange}
                   />
-                  
+
                   {/* {datapage && <p className="text-sm text-gray-500">ID actual: {datapage.id}</p>}
                    */}
                   <input
@@ -150,8 +201,8 @@ export default function ModalForm({ btnCreate, datapage, onUpdate }: ModalFormPr
                     value={formData.RedPaginaId}
                     onChange={handleChange}
                   />
-                 
-                  <Button color="primary" onClick={sendDatapage}>
+
+                  <Button className="bg-blue-600" onClick={sendDatapage}>
                     Guardar
                   </Button>
                 </div>

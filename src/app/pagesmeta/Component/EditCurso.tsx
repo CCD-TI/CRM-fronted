@@ -3,7 +3,8 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Image, FileVideo, FileAudio, File, Upload, X, Plus } from "lucide-react"
+import { Image as Imagenicon, FileVideo, FileAudio, File, Upload, X, Plus } from "lucide-react"
+import Image from "next/image"
 
 export default function CourseEditForm() {
   const [title, setTitle] = useState("")
@@ -27,22 +28,22 @@ export default function CourseEditForm() {
   }
 
   // Handle click outside to close modal
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        openModal &&
-        modalRefs[openModal as keyof typeof modalRefs]?.current &&
-        !modalRefs[openModal as keyof typeof modalRefs].current?.contains(event.target as Node)
-      ) {
-        setOpenModal(null)
-      }
-    }
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     if (
+  //       openModal &&
+  //       modalRefs[openModal as keyof typeof modalRefs]?.current &&
+  //       !modalRefs[openModal as keyof typeof modalRefs].current?.contains(event.target as Node)
+  //     ) {
+  //       setOpenModal(null)
+  //     }
+  //   }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [openModal])
+  //   document.addEventListener("mousedown", handleClickOutside)
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside)
+  //   }
+  // }, [openModal])
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -183,7 +184,7 @@ export default function CourseEditForm() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-md font-medium flex items-center">
-                  <Image className="h-5 w-5 mr-2" />
+                  <Imagenicon className="h-5 w-5 mr-2" />
                   Imágenes
                 </h4>
                 <button
@@ -201,7 +202,9 @@ export default function CourseEditForm() {
                   {images.map((file, index) => (
                     <div key={index} className="relative group">
                       <div className="aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img
+                        <Image
+                        width={50}
+                        height={50}
                           src={URL.createObjectURL(file) || "/placeholder.svg"}
                           alt={`Preview ${index}`}
                           className="object-cover w-full h-full"
@@ -400,7 +403,9 @@ export default function CourseEditForm() {
                   {images.map((file, index) => (
                     <div key={index} className="relative group">
                       <div className="aspect-square rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img
+                        <Image
+                        width={50}
+                        height={50}
                           src={URL.createObjectURL(file) || "/placeholder.svg"}
                           alt={`Preview ${index}`}
                           className="object-cover w-full h-full"
