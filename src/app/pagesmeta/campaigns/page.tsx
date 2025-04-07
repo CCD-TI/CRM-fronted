@@ -10,7 +10,7 @@ import {
   Button,
   useDisclosure,
 } from "@heroui/react";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, Suspense, useCallback, useEffect, useState } from "react";
 import {
   Edit,
   Trash2,
@@ -40,7 +40,7 @@ import ModalFormcampaingUpdate from "../Component/Modals/ModalFormcampaingUpdate
 //   Campaing?: string;
 // }
 
-export default function App() {
+ const App = () =>{
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
   const paginaId = Number(searchParams.get("paginaId"));
@@ -550,3 +550,15 @@ export default function App() {
     </>
   );
 }
+
+
+const SuspendedCampaignForm = () => {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <App />
+    </Suspense>
+  );
+};
+
+
+export default SuspendedCampaignForm;

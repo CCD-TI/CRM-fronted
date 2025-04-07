@@ -62,7 +62,7 @@ const DropDownlistTemplate =  ({ onSeleccion }: DropDownlistTemplateProps) => {
         <input
           type="text"
           className="w-full p-2 border rounded"
-          placeholder="Buscar Template..."
+          placeholder="Buscar Flow..."
           value={busqueda}
           onChange={manejarCambioBusqueda}
           onClick={() => setAbierto(true)}

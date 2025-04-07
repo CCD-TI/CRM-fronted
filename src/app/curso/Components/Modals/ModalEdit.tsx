@@ -183,6 +183,7 @@ export default function App({ IdCurso, btn, onUpdate }: DataCurso) {
         {btn}
       </div>
       <Modal
+        isDismissable ={false}
         size="5xl"
         classNames={{
           base: "max-h-[800px]", // Altura máxima del modal

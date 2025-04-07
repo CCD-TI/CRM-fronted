@@ -1,4 +1,4 @@
-import { CameraIcon } from "@/app/profile/_components/icons";
+// import { CameraIcon } from "@/app/profile/_components/icons";
 import ChartPieUser from "@/components/ChartCCD/ChartPieUser";
 import ChartUSer from "@/components/ChartCCD/ChartUSer";
 import {

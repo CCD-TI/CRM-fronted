@@ -155,7 +155,7 @@ export default function CursoForm({btnTrigger,onUpdate}:propsData) {
      {btnTrigger}
     </div>
       
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} isDismissable ={false}>  
         <ModalContent>
           {(onClose) => (
             <>

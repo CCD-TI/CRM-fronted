@@ -20,12 +20,12 @@ export const NAV_DATA = [
         icon: Icons.Calendar,
         items: [],
       },
-      {
-        title: "Usuario",
-        url: "/profile",
-        icon: Icons.User,
-        items: [],
-      },
+      // {
+      //   title: "Usuario",
+      //   url: "/profile",
+      //   icon: Icons.User,
+      //   items: [],
+      // },
       // {
       //   title: "Forms",
       //   icon: Icons.Alphabet,

@@ -10,7 +10,7 @@ import {
   Button,
   useDisclosure,
 } from "@heroui/react";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, Suspense, useCallback, useEffect, useState } from "react";
 import {
   Edit,
   Trash2,
@@ -37,17 +37,18 @@ import ModalUpdateForm from "../../Component/Modals/ModalUpdateForm";
 import { Formulario } from "@/types/leads/paginas";
 import { ViewCursos } from "@/services/Cursos-Api/PushAPI";
 
-interface PropsFormCampaing {
-  Content: ReactNode;
-  Campaing?: string;
-}
+// interface PropsFormCampaing {
+//   Content: ReactNode;
+//   Campaing?: string;
+// }
 
-export default function Form({ Content, Campaing }: PropsFormCampaing) {
+const  Form =() => {
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
   const campangId = Number(searchParams.get("campingId"));
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+
+  
   const [isModalOpen, setIsModalOpen] = useState();
   const [bots, setIsBots] = useState<IBot|null>(null);
   const [curso, setIsCurso] = useState<ICurso|null>(null);
@@ -596,5 +597,14 @@ export default function Form({ Content, Campaing }: PropsFormCampaing) {
         {/* Modal para editar curso */}
       </div>
     </>
+  );
+}
+
+
+export default function SuspenseProblem() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Form />
+    </Suspense>
   );
 }
