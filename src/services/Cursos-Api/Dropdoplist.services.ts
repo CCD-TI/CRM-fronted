@@ -2,11 +2,11 @@ import { Bots, ApiResponsebots, ApiResponse, Flow } from "@/types/flows";
 
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL  || "https://crm.paulyeffertperezsanjinez.link/";
 
 export const searchBots = async (searchTerm: string = ''): Promise<Bots[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/masivo/bots/search?imagebot=bot-crm`, {
+    const response = await fetch(`${API_BASE}/api/masivo/bots/search?imagebot=bot-crm`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export const searchBots = async (searchTerm: string = ''): Promise<Bots[]> => {
 
 export const searchFlows = async (searchTerm: string = '', masivos: boolean = false): Promise<Flow[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/masivo/flows/search?masivos=false`, {
+    const response = await fetch(`${API_BASE}/api/masivo/flows/search?masivos=false`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ import { Bots } from "@/types/flows";
 import { Formulario } from "@/types/leads/paginas";
 
 
-const API_URL = "http://localhost:8000"; // Ajusta la URL base
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL  || "https://crm.paulyeffertperezsanjinez.link/";
 
 export const FormCreate = {
   async create(formData: any) {
